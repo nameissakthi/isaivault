@@ -6,7 +6,6 @@ import Logo from "./Logo"
 import Spacer from "./Spacer";
 import ThemedLinkButton from "./ThemedLinkButton";
 import Loading from "./Loading";
-import UserOnly from "./auth/UserOnly";
 
 export {
     Logo,
@@ -16,7 +15,5 @@ export {
     ThemedInput,
     Spacer,
     ThemedLinkButton,
-    Loading,
-
-    UserOnly,
+    Loading
 }

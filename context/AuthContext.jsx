@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { createContext, useContext, useState } from "react";
 
 const AuthContext = createContext();
@@ -6,6 +7,8 @@ const AuthProvider = ({children}) => {
 
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    const router = useRouter();
 
     const login = async () => {
         try {
@@ -23,6 +26,7 @@ const AuthProvider = ({children}) => {
 
             if(result.success) {
                 setUser(result.user);
+                router.replace("/(tabs)")
             }
 
             return result;
@@ -39,6 +43,7 @@ const AuthProvider = ({children}) => {
             setIsLoading(true);
             await new Promise((resolve) => setTimeout(resolve, 3000));
             setUser(null);
+            router.replace("/login");
         } catch (error) {
             throw new Error(error.message);
         } finally {

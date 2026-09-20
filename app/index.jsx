@@ -3,19 +3,17 @@ import { useAuth } from "../context/AuthContext";
 
 import { Loading } from "../components/components";
 
-const index = () => {
+const index = ({ children }) => {
 
 	const { isLoading, isAuthenticated } = useAuth();
 
-	console.log(isAuthenticated + "from index");
+	if (isLoading) return <Loading />;
 
-	if(isLoading) return <Loading />
+	console.log(isAuthenticated);
 
-	if(isAuthenticated) return <Redirect href={"/(tabs)"} />
-
-	return (
-		<Redirect href={"/(auth)/login"} />
-	)
+	return isAuthenticated
+    ? <Redirect href="/(tabs)" />
+    : <Redirect href="/(auth)/login" />;
 }
 
 export default index

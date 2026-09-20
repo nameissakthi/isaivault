@@ -1,12 +1,11 @@
 import { Stack } from "expo-router"
-import UserOnly from "../../components/auth/UserOnly";
 import { ThemedView, ThemedText } from "../../components/components";
 
 const _layout = () => {
   return (
     <>
         <Stack screenOptions={{
-            headerShown : true
+            headerShown : false
         }}>
           <Stack.Screen name="login" options={{
             title : "Login"
