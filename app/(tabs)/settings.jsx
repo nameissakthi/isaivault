@@ -1,41 +1,108 @@
-import { Background } from "expo-router/build/react-navigation";
-import { Spacer, ThemedButton, ThemedLinkButton, ThemedText, ThemedView } from "../../components/components";
+import { Spacer, ThemedButton, ThemedText, ThemedView } from "../../components/components";
 import { useAuth } from "../../context/AuthContext";
+import { Image, useColorScheme } from "react-native";
+import Colors from "../../constants/Colors";
 
 const settings = () => {
 
-	const { user, logout, isLoading } = useAuth()
+	const { user, logout, isLoading } = useAuth();
+
+	const theme = useColorScheme();
+	const colors = theme === 'dark' ? Colors.dark : Colors.light;
+
+	console.log(user);
 
 	return (
 		<ThemedView safe style={{
-			flex : 1
+			flex: 1
 		}}>
-			<ThemedText style={{
-				fontSize : 25,
-				fontWeight : 800
-			}}>Settings</ThemedText>
+			<Spacer />
+
+			<ThemedView style={{
+				alignItems : "center"
+			}}>
+				<Image
+					source={{
+						uri: user?.photo
+					}}
+
+					style={{
+						width: 100,
+						height: 100,
+						borderRadius: 100
+					}}
+
+					alt="User"
+				/>
+				<ThemedText style={{
+					fontWeight : 800,
+					fontSize : 30
+				}}>{user?.name}</ThemedText>
+			</ThemedView>
 
 			<Spacer />
 
 			<ThemedView style={{
 				paddingHorizontal : 20
 			}}>
-				<ThemedView>
-					<ThemedText>Name : </ThemedText>
-					<ThemedText>{user?.name}</ThemedText>
-				</ThemedView>
-
-				<ThemedView>
-					<ThemedText>Email : </ThemedText>
-					<ThemedText>{user?.email}</ThemedText>
+				<ThemedView style={{
+					backgroundColor : colors.elevated,
+					padding : 10,
+					borderRadius : 5
+				}}>
+					<ThemedText style={{
+						fontWeight : 800,
+						fontSize : 15
+					}}>Email</ThemedText>
+					<ThemedText style={{
+						fontWeight : 800,
+						marginLeft : 10,
+						marginTop : 10
+					}}>{user?.email}</ThemedText>
 				</ThemedView>
 			</ThemedView>
 
-			{
-				isLoading ?
-				<ThemedButton style={{backgroundColor : "red"}} width={"100%"} title={"Logging Out...."} disabled /> :
-				<ThemedButton style={{backgroundColor : "red"}} width={"100%"} title={"Logout"} onPress={logout} />
-			}
+			<Spacer />
+
+			<ThemedView style={{
+				marginHorizontal : 20,
+				flexDirection : "row",
+				justifyContent : "space-between",
+				alignItems : "center",
+				backgroundColor : "skyblue",
+				borderRadius : 100
+			}}>
+				<Image
+					source={{
+						uri : "https://www.freepnglogos.com/uploads/google-logo-png/google-logo-png-google-icon-logo-png-transparent-svg-vector-bie-supply-14.png"
+					}}
+
+					style={{
+						width : 40,
+						height : 40
+					}}
+
+					alt="Google Logo"
+				/>
+
+				<ThemedText style={{
+					fontSize : 20,
+					marginRight : 10,
+					color : colors.textSecondary
+				}}>Connected With Google Drive</ThemedText>
+			</ThemedView>
+
+			<Spacer />
+
+			<ThemedView style={{
+				paddingHorizontal : 20
+			}}>
+				{
+					isLoading ?
+						<ThemedButton style={{ backgroundColor: "red" }} width={"100%"} title={"Logging Out...."} disabled /> :
+						<ThemedButton style={{ backgroundColor: "red" }} width={"100%"} title={"Logout"} onPress={logout} />
+				}
+			</ThemedView>
 		</ThemedView>
 	)
 }

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import { createContext, useContext, useState } from "react";
-import { loginWithGoogle, logoutFromGoogle } from "../services/auth/authService";
+import { createContext, useContext, useEffect, useState } from "react";
+import { loginWithGoogle, logoutFromGoogle, restoreGoogleSession } from "../services/auth/authService";
 
 const AuthContext = createContext();
 
@@ -10,6 +10,26 @@ const AuthProvider = ({children}) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const router = useRouter();
+
+    useEffect(() => {
+
+        const restoreSession = async () => {
+            try {
+                setIsLoading(true);
+                const response = await restoreGoogleSession();
+
+                if(response.success) setUser(response.user);
+                else console.log(response?.message);
+            } catch(error) {
+                console.log(error.message);
+                setUser(null);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+
+        restoreSession();
+    }, [])
 
     const login = async () => {
         try {

@@ -15,9 +15,7 @@ const login = () => {
 
     const handleGoogleLogin = async () => {
         try {
-            const response = await login();
-
-            console.log(response);
+            await login();
         } catch (error) {
             console.log(error.message);
         }

@@ -6,6 +6,25 @@ GoogleSignin.configure({
     webClientId : WEB_CLIENT_ID
 });
 
+export const restoreGoogleSession = async () => {
+
+    try {
+
+        const response = await GoogleSignin.signInSilently();
+
+        return {
+            success : true,
+            user : response.data.user
+        }
+    } catch (error) {
+        return {
+            success : false,
+            user : null,
+            message : error.message
+        }
+    }
+};
+
 export const loginWithGoogle = async () => {
 
     try {
