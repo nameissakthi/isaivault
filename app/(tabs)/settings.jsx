@@ -10,8 +10,6 @@ const settings = () => {
 	const theme = useColorScheme();
 	const colors = theme === 'dark' ? Colors.dark : Colors.light;
 
-	console.log(user);
-
 	return (
 		<ThemedView safe style={{
 			flex: 1
