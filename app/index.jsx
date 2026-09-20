@@ -1,20 +1,20 @@
-import { ThemedLinkButton, ThemedText, ThemedView } from "../components/components";
+import { Redirect } from "expo-router";
 import { useAuth } from "../context/AuthContext";
+
+import { Loading } from "../components/components";
 
 const index = () => {
 
-	const { user, isAuthenticated } = useAuth();
+	const { isLoading, isAuthenticated } = useAuth();
+
+	console.log(isAuthenticated + "from index");
+
+	if(isLoading) return <Loading />
+
+	if(isAuthenticated) return <Redirect href={"/(tabs)"} />
 
 	return (
-		<ThemedView safe>
-			<ThemedText>Index</ThemedText>
-
-			<ThemedText>{isAuthenticated ? "YES" : "NO"}</ThemedText>
-
-			{ user && <ThemedText>Welcome {user.name}</ThemedText> }
-
-			<ThemedLinkButton toLink="/login" title={"Login"} />
-		</ThemedView>
+		<Redirect href={"/(auth)/login"} />
 	)
 }
 

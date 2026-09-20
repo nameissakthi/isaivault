@@ -11,7 +11,7 @@ const AuthProvider = ({children}) => {
         try {
             setIsLoading(true);
 
-            await new Promise((resolve) => setTimeout(resolve, 5000));
+            await new Promise((resolve) => setTimeout(resolve, 3000));
 
             const result = {
                 success : true,
@@ -37,7 +37,7 @@ const AuthProvider = ({children}) => {
     const logout = async () => {
         try {
             setIsLoading(true);
-
+            await new Promise((resolve) => setTimeout(resolve, 3000));
             setUser(null);
         } catch (error) {
             throw new Error(error.message);

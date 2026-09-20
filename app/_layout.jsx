@@ -1,21 +1,28 @@
 import { Stack } from "expo-router"
 import { AuthProvider } from "../context/AuthContext"
+import { UserOnly } from "../components/components";
 
 const RootLayout = () => {
 	return (
 		<AuthProvider>
-			<Stack screenOptions={{
-				headerShown : false
-			}}>
+			<UserOnly>
+				<Stack screenOptions={{
+					headerShown: true
+				}}>
 
-				<Stack.Screen name="index" options={{
-					title : "Home"
-				}}/>
+					<Stack.Screen name="index" options={{
+						title: "Home"
+					}} />
 
-				<Stack.Screen name="(auth)" options={{
-					headerShown : false
-				}} />
-			</Stack>
+					<Stack.Screen name="(auth)" options={{
+						headerShown: false
+					}} />
+
+					<Stack.Screen name="(tabs)" options={{
+						headerShown: false
+					}} />
+				</Stack>
+			</UserOnly>
 		</AuthProvider>
 	)
 }

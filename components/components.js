@@ -5,7 +5,8 @@ import ThemedInput from "./ThemedInput";
 import Logo from "./Logo"
 import Spacer from "./Spacer";
 import ThemedLinkButton from "./ThemedLinkButton";
-
+import Loading from "./Loading";
+import UserOnly from "./auth/UserOnly";
 
 export {
     Logo,
@@ -14,5 +15,8 @@ export {
     ThemedButton,
     ThemedInput,
     Spacer,
-    ThemedLinkButton
+    ThemedLinkButton,
+    Loading,
+
+    UserOnly,
 }
