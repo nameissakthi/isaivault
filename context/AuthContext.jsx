@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
 import { createContext, useContext, useState } from "react";
+import { loginWithGoogle, logoutFromGoogle } from "../services/auth/authService";
 
 const AuthContext = createContext();
 
@@ -14,15 +15,7 @@ const AuthProvider = ({children}) => {
         try {
             setIsLoading(true);
 
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-
-            const result = {
-                success : true,
-                user : {
-                    name : "sakthivel",
-                    email : "sakthivel@gmail.com"
-                }
-            };
+            const result = await loginWithGoogle();
 
             if(result.success) {
                 setUser(result.user);
@@ -41,7 +34,9 @@ const AuthProvider = ({children}) => {
     const logout = async () => {
         try {
             setIsLoading(true);
-            await new Promise((resolve) => setTimeout(resolve, 3000));
+            
+            await logoutFromGoogle();
+
             setUser(null);
             router.replace("/login");
         } catch (error) {

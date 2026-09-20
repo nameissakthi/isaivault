@@ -1,10 +1,38 @@
+import { GoogleSignin } from "@react-native-google-signin/google-signin"
+
+const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+
+GoogleSignin.configure({
+    webClientId : WEB_CLIENT_ID
+});
+
 export const loginWithGoogle = async () => {
 
-    return {
-        success : true,
-        user : {
-            name : "sakthivel",
-            email : "sakthivel@gmail.com"
+    try {
+
+        await GoogleSignin.hasPlayServices({
+            showPlayServicesUpdateDialog : true
+        })
+
+        const response = await GoogleSignin.signIn();
+
+        return {
+            success : true,
+            user : response.data.user,
+            idToken : response.data.idToken
         }
+    } catch (error) {
+        console.error("Google Sign In Error : ", error.message);
+        throw new Error(error.message);
     }
-}
+};
+
+export const logoutFromGoogle = async () => {
+    
+    try {
+        await GoogleSignin.signOut();
+    } catch (error) {
+        console.error("Google Logout Error : ", error.message);
+        throw new Error(error.message);
+    }
+};

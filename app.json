@@ -6,11 +6,12 @@
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
-    "scheme" : "isaivault",
+    "scheme": "isaivault",
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.sakthivel.isaivault",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -23,10 +24,19 @@
     },
     "plugins": [
       "expo-router",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-secure-store",
+      "@react-native-google-signin/google-signin"
     ],
-    "experiments" : {
-      "typedRoutes" : true
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "075c3d6b-da08-48a1-9acb-b22560f6a7b5"
+      }
     }
   }
 }
