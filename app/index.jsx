@@ -4,16 +4,16 @@ import { useLibrary } from "../context/LibraryContext";
 
 import { Loading } from "../components/components";
 
-const index = ({ children }) => {
+const index = () => {
 
 	const { isLoading, isAuthenticated } = useAuth();
-	const { isLibraryLoading, musicFolder } = useLibrary();
+	const { isLibraryLoading, rootFolderFound } = useLibrary();
 
 	if (isLoading || isLibraryLoading) return <Loading />;
 
 	if (!isAuthenticated) return <Redirect href={"/(auth)/login"} />
 
-	if (!musicFolder) return <Redirect href={"/(setup)"} />
+	if (!rootFolderFound) return <Redirect href={"/(setup)"} />
 
 	return <Redirect href={"/(tabs)"} />
 }

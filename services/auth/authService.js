@@ -58,18 +58,3 @@ export const logoutFromGoogle = async () => {
         throw new Error(error.message);
     }
 };
-
-export const getGoogleDriveToken = async () => {
-
-    try {
-        const tokens = await GoogleSignin.getTokens();
-
-        return {
-            success : true,
-            accessToken : tokens.accessToken
-        }
-    } catch (error) {
-        console.error("Google Drive Access Token Retrival Error : ", error.message);
-        throw new Error(error.message);
-    }
-};

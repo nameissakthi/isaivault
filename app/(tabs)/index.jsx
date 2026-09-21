@@ -18,7 +18,9 @@ const index = () => {
   }, [])
 
   return (
-    <ThemedView safe>
+    <ThemedView safe style={{
+      flex : 1
+    }}>
         <ThemedText>Home</ThemedText>
     </ThemedView>
   )

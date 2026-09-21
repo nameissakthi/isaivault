@@ -11,9 +11,6 @@ const _layout = () => {
             title : "Login"
           }} />
         </Stack>
-        <ThemedView>
-          <ThemedText style={{textAlign : "center", fontWeight : 900, fontSize : 10}}>Created with ❤️ by sakthivel</ThemedText>
-        </ThemedView>
     </>
   )
 }

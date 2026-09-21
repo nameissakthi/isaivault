@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
 import { loginWithGoogle, logoutFromGoogle, restoreGoogleSession } from "../services/auth/authService";
 
@@ -8,8 +7,6 @@ const AuthProvider = ({children}) => {
 
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-
-    const router = useRouter();
 
     useEffect(() => {
 
@@ -37,10 +34,7 @@ const AuthProvider = ({children}) => {
 
             const result = await loginWithGoogle();
 
-            if(result.success) {
-                setUser(result.user);
-                router.replace("/(tabs)")
-            }
+            if(result.success) setUser(result.user);
 
             return result;
 
@@ -58,7 +52,6 @@ const AuthProvider = ({children}) => {
             await logoutFromGoogle();
 
             setUser(null);
-            router.replace("/login");
         } catch (error) {
             throw new Error(error.message);
         } finally {

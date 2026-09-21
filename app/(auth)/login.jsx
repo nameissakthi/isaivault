@@ -2,8 +2,7 @@ import { useColorScheme } from "react-native"
 import { Logo, ThemedView, ThemedText, Spacer, ThemedButton } from "../../components/components"
 import Colors from "../../constants/Colors"
 import { useAuth } from "../../context/AuthContext";
-
-import { loginWithGoogle } from "../../services/auth/authService"
+import { useRouter } from "expo-router";
 
 const login = () => {
 
@@ -13,9 +12,13 @@ const login = () => {
 
     const { login, isLoading } = useAuth();
 
+    const router = useRouter();
+
     const handleGoogleLogin = async () => {
         try {
             await login();
+
+            router.replace("/(setup)");
         } catch (error) {
             console.log(error.message);
         }
@@ -23,41 +26,49 @@ const login = () => {
 
     return (
         <ThemedView style={{
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center"
+            flex : 1
         }}>
             <ThemedView style={{
-                flexDirection: "row",
+                flex: 1,
+                justifyContent: "center",
                 alignItems: "center"
             }}>
-                <Logo width={80} height={80} />
+                <ThemedView style={{
+                    flexDirection: "row",
+                    alignItems: "center"
+                }}>
+                    <Logo width={80} height={80} />
+                    <ThemedText style={{
+                        fontSize: 50,
+                        fontWeight: 800,
+                        marginTop: 10
+                    }}>IsaiVault</ThemedText>
+                </ThemedView>
+
+                <Spacer height={5} />
                 <ThemedText style={{
-                    fontSize: 50,
-                    fontWeight: 800,
-                    marginTop: 10
-                }}>IsaiVault</ThemedText>
+                    borderTopWidth: 1,
+                    borderBottomWidth: 1,
+                    borderColor: colors.border,
+                    width: "70%",
+                    textAlign: "center",
+                    fontWeight: 100
+                }}>Your music. Your Drive.</ThemedText>
+
+
+                <Spacer height={100} />
+
+                <ThemedView>
+                    {
+                        isLoading ?
+                            <ThemedButton width={300} title={"Signing In......"} disabled /> :
+                            <ThemedButton width={300} title={"Continue With Google"} onPress={handleGoogleLogin} />
+                    }
+                </ThemedView>
             </ThemedView>
 
-            <Spacer height={5} />
-            <ThemedText style={{
-                borderTopWidth: 1,
-                borderBottomWidth: 1,
-                borderColor: colors.border,
-                width: "70%",
-                textAlign: "center",
-                fontWeight: 100
-            }}>Your music. Your Drive.</ThemedText>
-
-
-            <Spacer height={100} />
-
             <ThemedView>
-                {
-                    isLoading ?
-                    <ThemedButton width={300} title={"Signing In......"} disabled /> :
-                    <ThemedButton width={300} title={"Continue With Google"} onPress={handleGoogleLogin} />
-                }
+                <ThemedText style={{ textAlign: "center", fontWeight: 900, fontSize: 10 }}>Created with ❤️ by sakthivel</ThemedText>
             </ThemedView>
         </ThemedView>
     )

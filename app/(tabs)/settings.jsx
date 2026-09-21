@@ -2,13 +2,33 @@ import { Spacer, ThemedButton, ThemedText, ThemedView } from "../../components/c
 import { useAuth } from "../../context/AuthContext";
 import { Image, useColorScheme } from "react-native";
 import Colors from "../../constants/Colors";
+import { useLibrary } from "../../context/LibraryContext";
+import { useRouter } from "expo-router";
 
 const settings = () => {
 
 	const { user, logout, isLoading } = useAuth();
+	const { rootFolder, musicFolder, removeFolderInfo } = useLibrary();
+	const router = useRouter();
 
 	const theme = useColorScheme();
 	const colors = theme === 'dark' ? Colors.dark : Colors.light;
+
+	const onLogout = async () => {
+		try {
+			await logout();
+
+			await removeFolderInfo();
+
+			router.replace("/(auth)/login")
+		} catch (error) {
+			console.log(error.message);
+		}
+	}
+
+	const goToFolderSelectionScreen = () => {
+		router.push("/(setup)");
+	}
 
 	return (
 		<ThemedView safe style={{
@@ -63,6 +83,57 @@ const settings = () => {
 			<Spacer />
 
 			<ThemedView style={{
+				paddingHorizontal : 20
+			}}>
+				<ThemedView style={{
+					backgroundColor : colors.elevated,
+					padding : 10,
+					borderRadius : 5
+				}}>
+					<ThemedText style={{
+						fontWeight : 800,
+						fontSize : 15
+					}}>Root Folder Selected</ThemedText>
+
+
+					<ThemedButton style={{
+						width : "100%",
+						backgroundColor : colors.surface,
+						marginTop : 10
+					}} title={rootFolder?.name} animated onPress={goToFolderSelectionScreen} />
+				</ThemedView>
+			</ThemedView>
+
+			<Spacer />
+
+			<ThemedView style={{
+				paddingHorizontal : 20
+			}}>
+				<ThemedView style={{
+					backgroundColor : colors.elevated,
+					padding : 10,
+					borderRadius : 5
+				}}>
+					<ThemedText style={{
+						fontWeight : 800,
+						fontSize : 15
+					}}>Root Folder Selected</ThemedText>
+
+					<ThemedText style={{
+						paddingVertical : 10,
+						width : "100%",
+						backgroundColor : colors.surface,
+						marginTop : 10,
+						borderRadius : 10,
+						fontWeight : 800,
+						textAlign : "center"
+					}}>{musicFolder?.name}</ThemedText>
+				</ThemedView>
+			</ThemedView>
+
+			{/* <Spacer />
+
+			<ThemedView style={{
 				marginHorizontal : 20,
 				flexDirection : "row",
 				justifyContent : "space-between",
@@ -86,9 +157,9 @@ const settings = () => {
 				<ThemedText style={{
 					fontSize : 20,
 					marginRight : 10,
-					color : colors.textSecondary
+					color : colors.text
 				}}>Connected With Google Drive</ThemedText>
-			</ThemedView>
+			</ThemedView> */}
 
 			<Spacer />
 
@@ -98,7 +169,7 @@ const settings = () => {
 				{
 					isLoading ?
 						<ThemedButton style={{ backgroundColor: "red" }} width={"100%"} title={"Logging Out...."} disabled /> :
-						<ThemedButton style={{ backgroundColor: "red" }} width={"100%"} title={"Logout"} onPress={logout} />
+						<ThemedButton style={{ backgroundColor: "red" }} width={"100%"} title={"Logout"} onPress={onLogout} />
 				}
 			</ThemedView>
 		</ThemedView>
