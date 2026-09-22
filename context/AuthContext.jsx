@@ -16,7 +16,6 @@ const AuthProvider = ({children}) => {
                 const response = await restoreGoogleSession();
 
                 if(response.success) setUser(response.user);
-                else console.log(response?.message);
             } catch(error) {
                 console.log(error.message);
                 setUser(null);

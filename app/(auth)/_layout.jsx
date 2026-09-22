@@ -1,5 +1,4 @@
 import { Stack } from "expo-router"
-import { ThemedView, ThemedText } from "../../components/components";
 
 const _layout = () => {
   return (

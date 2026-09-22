@@ -7,6 +7,11 @@ import Spacer from "./Spacer";
 import ThemedLinkButton from "./ThemedLinkButton";
 import Loading from "./Loading";
 
+import MusicCard from "./screen_components/MusicCard";
+import MusicOptionsMenu from "./screen_components/MusicOptionsMenu";
+import MusicPlayer from "./screen_components/MusicPlayer";
+import MiniPlayer from "./screen_components/MiniPlayer";
+
 export {
     Logo,
     ThemedView,
@@ -15,5 +20,11 @@ export {
     ThemedInput,
     Spacer,
     ThemedLinkButton,
-    Loading
+    Loading,
+
+
+    MusicCard,
+    MusicOptionsMenu,
+
+    MusicPlayer
 }

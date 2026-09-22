@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getDriveFolders, getDriveFoldersInside } from "../services/drive/driveService";
+import { getDriveFolders, getDriveFoldersInside, getDriveFiles } from "../services/drive/driveService";
 
 const { createContext, useContext, useState, useEffect } = require("react");
 
@@ -34,11 +34,11 @@ const LibraryProvider = ({ children }) => {
 
     const selectRootFolder = async (folder) => {
         try {
-			await AsyncStorage.setItem(ASYNC_STORAGE_FOLDER_KEY_NAME, JSON.stringify(folder));
-			setRootFolder(folder);
-		} catch (error) {
-			throw new Error(error.message);
-		}
+            await AsyncStorage.setItem(ASYNC_STORAGE_FOLDER_KEY_NAME, JSON.stringify(folder));
+            setRootFolder(folder);
+        } catch (error) {
+            throw new Error(error.message);
+        }
     }
 
     const selectMusicFolder = async (folder) => {
@@ -61,7 +61,9 @@ const LibraryProvider = ({ children }) => {
     const removeFolderInfo = async () => {
         try {
             await AsyncStorage.removeItem(ASYNC_STORAGE_FOLDER_KEY_NAME);
+            await AsyncStorage.removeItem(ASYNC_STORAGE_MUSIC_FOLDER_KEY_NAME);
             setRootFolder(null);
+            selectMusicFolder(null);
         } catch (error) {
             throw new Error(error.message);
         }
@@ -76,15 +78,28 @@ const LibraryProvider = ({ children }) => {
         }
     };
 
+    const getFilesFromGoogleDrive = async () => {
+        try {
+            if (!musicFolder) {
+                return [];
+            }
+
+            const response = await getDriveFiles(musicFolder.id);
+            return response;
+        } catch (error) {
+            throw new Error(error.message);
+        }
+    }
+
 
     const value = {
-        rootFolder, setRootFolder, 
-        
-        isLibraryLoading, removeFolderInfo, rootFolderFound : rootFolder !== null,
-        
+        rootFolder, setRootFolder,
+
+        isLibraryLoading, removeFolderInfo, rootFolderFound: rootFolder !== null,
+
         selectRootFolder, selectMusicFolder, musicFolder,
 
-        getGoogleDriveFoldersInside, getGoogleDriveFolders,
+        getGoogleDriveFoldersInside, getGoogleDriveFolders, getFilesFromGoogleDrive
     }
 
     return (

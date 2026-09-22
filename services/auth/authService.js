@@ -10,21 +10,28 @@ GoogleSignin.configure({
 });
 
 export const restoreGoogleSession = async () => {
-
     try {
-
         const response = await GoogleSignin.signInSilently();
 
-        return {
-            success : true,
-            user : response.data.user
+        if (!response?.data?.user) {
+            return {
+                success: false,
+                user: null,
+                message: "No Google session found"
+            };
         }
+
+        return {
+            success: true,
+            user: response.data.user
+        };
+
     } catch (error) {
         return {
-            success : false,
-            user : null,
-            message : error.message
-        }
+            success: false,
+            user: null,
+            message: error.message
+        };
     }
 };
 
