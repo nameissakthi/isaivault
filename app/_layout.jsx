@@ -1,26 +1,46 @@
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import {
+    Stack
+} from "expo-router";
 
-import { getSavedTheme } from "../services/theme/themeService";
+import {
+    StatusBar
+} from "expo-status-bar";
 
-import { AuthProvider } from "../context/AuthContext";
-import { LibraryProvider } from "../context/LibraryContext";
-import { AudioPlayerProvider } from "../context/AudioPlayerContext";
+import {
+    AuthProvider
+} from "../context/AuthContext";
+
+import {
+    LibraryProvider
+} from "../context/LibraryContext";
+
+import {
+    PlaylistProvider
+} from "../context/PlaylistContext";
+
+import {
+    AudioPlayerProvider
+} from "../context/AudioPlayerContext";
+
+import { MiniPlayer } from "../components/components"
 
 const RootLayout = () => {
-
-    useEffect(() => {
-        getSavedTheme();
-    }, []);
-
     return (
         <AuthProvider>
             <LibraryProvider>
-                <AudioPlayerProvider>
-                    <StatusBar style="auto" />
-                    <Stack screenOptions={{ headerShown: false }} />
-                </AudioPlayerProvider>
+                <PlaylistProvider>
+                    <AudioPlayerProvider>
+                        <StatusBar style="auto" />
+
+                        <Stack
+                            screenOptions={{
+                                headerShown: false
+                            }}
+                        />
+
+                        <MiniPlayer />
+                    </AudioPlayerProvider>
+                </PlaylistProvider>
             </LibraryProvider>
         </AuthProvider>
     );

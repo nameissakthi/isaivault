@@ -4,7 +4,7 @@
     "slug": "IsaiVault",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "dark",
     "scheme": "isaivault",
     "ios": {
@@ -13,10 +13,9 @@
     "android": {
       "package": "com.sakthivel.isaivault",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#b30000",
+        "foregroundImage": "./assets/images/foreground.png",
+        "monochromeImage": "./assets/images/foreground.png"
       }
     },
     "web": {

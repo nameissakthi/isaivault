@@ -5,7 +5,15 @@ import {
     useColorScheme
 } from "react-native";
 
-import { useRouter } from "expo-router";
+import {
+    useEffect,
+    useRef
+} from "react";
+
+import {
+    useRouter,
+    useSegments
+} from "expo-router";
 
 import {
     MaterialDesignIcons
@@ -18,7 +26,6 @@ import {
 import Colors from "../../constants/Colors";
 
 const MiniPlayer = () => {
-
     const theme = useColorScheme();
 
     const colors = theme === "dark"
@@ -26,6 +33,9 @@ const MiniPlayer = () => {
         : Colors.light;
 
     const router = useRouter();
+    const segments = useSegments();
+
+    const openingPlayer = useRef(false);
 
     const {
         currentMusic,
@@ -35,15 +45,30 @@ const MiniPlayer = () => {
         togglePlayback
     } = useAudioPlayerContext();
 
+    const isPlayerScreen =
+        segments.includes("(player)");
+
+    useEffect(() => {
+        if (!isPlayerScreen) {
+            openingPlayer.current = false;
+        }
+    }, [isPlayerScreen]);
+
     const progress = duration > 0
         ? currentTime / duration
         : 0;
 
-    if (!currentMusic) {
+    if (!currentMusic || isPlayerScreen) {
         return null;
     }
 
     const openFullPlayer = () => {
+        if (openingPlayer.current) {
+            return;
+        }
+
+        openingPlayer.current = true;
+
         router.push("/(player)");
     };
 
@@ -66,17 +91,24 @@ const MiniPlayer = () => {
                 paddingHorizontal: 10,
                 elevation: 8,
                 shadowColor: "#000",
-                shadowOffset: { width: 0, height: 3 },
+                shadowOffset: {
+                    width: 0,
+                    height: 3
+                },
                 shadowOpacity: 0.15,
                 shadowRadius: 8
             }}
         >
             <Pressable
                 onPress={openFullPlayer}
+                disabled={openingPlayer.current}
                 style={{
                     flex: 1,
                     flexDirection: "row",
-                    alignItems: "center"
+                    alignItems: "center",
+                    opacity: openingPlayer.current
+                        ? 0.6
+                        : 1
                 }}
             >
                 <View
@@ -137,7 +169,10 @@ const MiniPlayer = () => {
                         <View
                             style={{
                                 height: "100%",
-                                width: `${progress * 100}%`,
+                                width: `${Math.min(
+                                    progress,
+                                    1
+                                ) * 100}%`,
                                 backgroundColor: colors.text,
                                 borderRadius: 10
                             }}
@@ -148,16 +183,24 @@ const MiniPlayer = () => {
 
             <Pressable
                 onPress={togglePlayback}
+                disabled={openingPlayer.current}
                 style={{
                     width: 44,
                     height: 44,
                     borderRadius: 22,
                     alignItems: "center",
-                    justifyContent: "center"
+                    justifyContent: "center",
+                    opacity: openingPlayer.current
+                        ? 0.6
+                        : 1
                 }}
             >
                 <MaterialDesignIcons
-                    name={status.playing ? "pause" : "play"}
+                    name={
+                        status.playing
+                            ? "pause"
+                            : "play"
+                    }
                     size={27}
                     color={colors.text}
                 />

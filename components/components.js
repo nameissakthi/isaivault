@@ -11,6 +11,7 @@ import MusicCard from "./screen_components/MusicCard";
 import MusicOptionsMenu from "./screen_components/MusicOptionsMenu";
 import MusicPlayer from "./screen_components/MusicPlayer";
 import MiniPlayer from "./screen_components/MiniPlayer";
+import PlaylistPicker from "./screen_components/PlaylistPicker";
 
 export {
     Logo,
@@ -25,6 +26,8 @@ export {
 
     MusicCard,
     MusicOptionsMenu,
+    MiniPlayer,
+    MusicPlayer,
 
-    MusicPlayer
+    PlaylistPicker
 }

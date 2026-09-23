@@ -23,6 +23,7 @@ import { setAppTheme } from "../../services/theme/themeService";
 const settings = () => {
 
     const { user, logout, isLoading } = useAuth();
+
     const {
         rootFolder,
         musicFolder,
@@ -32,12 +33,15 @@ const settings = () => {
     const router = useRouter();
 
     const theme = useColorScheme();
-    const colors = theme === "dark" ? Colors.dark : Colors.light;
+    const colors = theme === "dark"
+        ? Colors.dark
+        : Colors.light;
 
     const isDark = theme === "dark";
 
     const toggleTheme = async () => {
-        const newTheme = isDark ? "light" : "dark";
+        const newTheme =
+            isDark ? "light" : "dark";
 
         await setAppTheme(newTheme);
     };
@@ -68,14 +72,17 @@ const settings = () => {
     };
 
     return (
-        <ThemedView safe style={{ flex: 1 }}>
+        <ThemedView
+            safe
+            style={{ flex: 1 }}
+        >
 
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
                     paddingHorizontal: 20,
                     paddingTop: 24,
-                    paddingBottom: 110,
+                    paddingBottom: 190,
                 }}
             >
 
@@ -92,9 +99,11 @@ const settings = () => {
                             height: 104,
                             borderRadius: 52,
                             padding: 3,
-                            backgroundColor: colors.elevated,
+                            backgroundColor:
+                                colors.elevated,
                         }}
                     >
+
                         <Image
                             source={{
                                 uri: user?.photo
@@ -106,6 +115,7 @@ const settings = () => {
                             }}
                             alt="User"
                         />
+
                     </View>
 
                     <ThemedText
@@ -130,7 +140,6 @@ const settings = () => {
 
                 </ThemedView>
 
-
                 <ThemedView style={cardStyle}>
 
                     <View
@@ -140,25 +149,30 @@ const settings = () => {
                             marginBottom: 14,
                         }}
                     >
+
                         <View
                             style={{
                                 width: 42,
                                 height: 42,
                                 borderRadius: 12,
-                                backgroundColor: colors.surface,
+                                backgroundColor:
+                                    colors.surface,
                                 alignItems: "center",
                                 justifyContent: "center",
                                 marginRight: 12,
                             }}
                         >
+
                             <MaterialDesignIcons
                                 name="account"
                                 size={23}
                                 color={colors.text}
                             />
+
                         </View>
 
                         <View>
+
                             <ThemedText
                                 style={{
                                     fontSize: 16,
@@ -177,17 +191,21 @@ const settings = () => {
                             >
                                 Connected account
                             </ThemedText>
+
                         </View>
+
                     </View>
 
                     <View
                         style={{
-                            backgroundColor: colors.surface,
+                            backgroundColor:
+                                colors.surface,
                             borderRadius: 12,
                             paddingHorizontal: 14,
                             paddingVertical: 12,
                         }}
                     >
+
                         <ThemedText
                             style={{
                                 fontSize: 14,
@@ -197,10 +215,10 @@ const settings = () => {
                         >
                             {user?.email}
                         </ThemedText>
+
                     </View>
 
                 </ThemedView>
-
 
                 <ThemedView
                     style={{
@@ -221,17 +239,20 @@ const settings = () => {
                                 width: 42,
                                 height: 42,
                                 borderRadius: 12,
-                                backgroundColor: colors.surface,
+                                backgroundColor:
+                                    colors.surface,
                                 alignItems: "center",
                                 justifyContent: "center",
                                 marginRight: 12,
                             }}
                         >
+
                             <MaterialDesignIcons
                                 name="folder"
                                 size={23}
                                 color={colors.text}
                             />
+
                         </View>
 
                         <View style={{ flex: 1 }}>
@@ -259,14 +280,16 @@ const settings = () => {
 
                     </View>
 
-
                     <Pressable
-                        onPress={goToFolderSelectionScreen}
+                        onPress={
+                            goToFolderSelectionScreen
+                        }
                         style={{
                             flexDirection: "row",
                             alignItems: "center",
                             justifyContent: "space-between",
-                            backgroundColor: colors.surface,
+                            backgroundColor:
+                                colors.surface,
                             borderRadius: 12,
                             paddingHorizontal: 14,
                             paddingVertical: 13,
@@ -281,19 +304,21 @@ const settings = () => {
                             }}
                             numberOfLines={1}
                         >
-                            {rootFolder?.name ?? "Not selected"}
+                            {rootFolder?.name ??
+                                "Not selected"}
                         </ThemedText>
 
                         <MaterialDesignIcons
                             name="chevron-right"
                             size={24}
-                            color={colors.textSecondary}
+                            color={
+                                colors.textSecondary
+                            }
                         />
 
                     </Pressable>
 
                 </ThemedView>
-
 
                 <ThemedView
                     style={{
@@ -314,17 +339,20 @@ const settings = () => {
                                 width: 42,
                                 height: 42,
                                 borderRadius: 12,
-                                backgroundColor: colors.surface,
+                                backgroundColor:
+                                    colors.surface,
                                 alignItems: "center",
                                 justifyContent: "center",
                                 marginRight: 12,
                             }}
                         >
+
                             <MaterialDesignIcons
                                 name="music-box"
                                 size={23}
                                 color={colors.text}
                             />
+
                         </View>
 
                         <View style={{ flex: 1 }}>
@@ -352,10 +380,10 @@ const settings = () => {
 
                     </View>
 
-
                     <View
                         style={{
-                            backgroundColor: colors.surface,
+                            backgroundColor:
+                                colors.surface,
                             borderRadius: 12,
                             paddingHorizontal: 14,
                             paddingVertical: 13,
@@ -369,7 +397,8 @@ const settings = () => {
                             }}
                             numberOfLines={1}
                         >
-                            {musicFolder?.name ?? "Not selected"}
+                            {musicFolder?.name ??
+                                "Not selected"}
                         </ThemedText>
 
                     </View>
@@ -395,17 +424,24 @@ const settings = () => {
                                 width: 42,
                                 height: 42,
                                 borderRadius: 12,
-                                backgroundColor: colors.surface,
+                                backgroundColor:
+                                    colors.surface,
                                 alignItems: "center",
                                 justifyContent: "center",
                                 marginRight: 12,
                             }}
                         >
+
                             <MaterialDesignIcons
-                                name={isDark ? "weather-night" : "white-balance-sunny"}
+                                name={
+                                    isDark
+                                        ? "weather-night"
+                                        : "white-balance-sunny"
+                                }
                                 size={23}
                                 color={colors.text}
                             />
+
                         </View>
 
                         <View
@@ -413,6 +449,7 @@ const settings = () => {
                                 flex: 1,
                             }}
                         >
+
                             <ThemedText
                                 style={{
                                     fontSize: 16,
@@ -429,8 +466,11 @@ const settings = () => {
                                     marginTop: 2,
                                 }}
                             >
-                                {isDark ? "Dark theme" : "Light theme"}
+                                {isDark
+                                    ? "Dark theme"
+                                    : "Light theme"}
                             </ThemedText>
+
                         </View>
 
                         <Pressable
@@ -458,9 +498,10 @@ const settings = () => {
                                     width: 24,
                                     height: 24,
                                     borderRadius: 12,
-                                    backgroundColor: isDark
-                                        ? colors.background
-                                        : colors.text,
+                                    backgroundColor:
+                                        isDark
+                                            ? colors.background
+                                            : colors.text,
                                     alignSelf: isDark
                                         ? "flex-end"
                                         : "flex-start",
@@ -470,11 +511,16 @@ const settings = () => {
                             >
 
                                 <MaterialDesignIcons
-                                    name={isDark ? "weather-night" : "white-balance-sunny"}
+                                    name={
+                                        isDark
+                                            ? "weather-night"
+                                            : "white-balance-sunny"
+                                    }
                                     size={14}
-                                    color={isDark
-                                        ? colors.text
-                                        : colors.background
+                                    color={
+                                        isDark
+                                            ? colors.text
+                                            : colors.background
                                     }
                                 />
 
@@ -527,12 +573,26 @@ const settings = () => {
                                 marginLeft: 8,
                             }}
                         >
-                            {isLoading ? "Logging Out..." : "Logout"}
+                            {isLoading
+                                ? "Logging Out..."
+                                : "Logout"}
                         </ThemedText>
 
                     </View>
 
                 </Pressable>
+
+                <ThemedText
+                    style={{
+                        textAlign: "center",
+                        fontSize: 12,
+                        opacity: 0.45,
+                        marginTop: 18,
+                        marginBottom: 10,
+                    }}
+                >
+                    Version 1.0.0
+                </ThemedText>
 
             </ScrollView>
 

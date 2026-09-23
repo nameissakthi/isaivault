@@ -1,9 +1,9 @@
 import {
     createContext,
     useContext,
-    useState,
     useEffect,
-    useRef
+    useRef,
+    useState
 } from "react";
 
 import {
@@ -16,43 +16,79 @@ import { getDriveAudioSource } from "../services/drive/driveService";
 const AudioPlayerContext = createContext(null);
 
 export const AudioPlayerProvider = ({ children }) => {
-
     const [currentMusic, setCurrentMusic] = useState(null);
-
     const [queue, setQueue] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(-1);
 
     const player = useAudioPlayer(null);
-
     const status = useAudioPlayerStatus(player);
 
-    const pendingPlay = useRef(false);
+    const shouldPlayAfterLoad = useRef(false);
     const changingTrack = useRef(false);
 
     const currentTime = status.currentTime ?? 0;
     const duration = status.duration ?? 0;
 
-    const addToQueue = (music) => {
+    const playMusic = async (music) => {
+        if (!music) return;
+        if (changingTrack.current) return;
+
+        changingTrack.current = true;
+        shouldPlayAfterLoad.current = true;
+
+        try {
+            const source = await getDriveAudioSource(music.id);
+
+            setQueue([music]);
+            setCurrentMusic(music);
+            setCurrentIndex(0);
+
+            player.replace(source);
+        } catch (error) {
+            shouldPlayAfterLoad.current = false;
+
+            console.log(
+                "Unable to play music:",
+                error.message
+            );
+        } finally {
+            changingTrack.current = false;
+        }
+    };
+
+    useEffect(() => {
+        if (!shouldPlayAfterLoad.current) return;
+        if (!status.isLoaded) return;
+
+        shouldPlayAfterLoad.current = false;
+
+        player.play();
+    }, [status.isLoaded]);
+
+    const addToQueue = async (music) => {
         if (!music) return;
 
-        setQueue(currentQueue => {
+        const alreadyExists = queue.some(
+            item => item.id === music.id
+        );
 
-            const alreadyExists = currentQueue.some(
-                item => item.id === music.id
-            );
+        if (alreadyExists) return;
 
-            if (alreadyExists) {
-                return currentQueue;
-            }
-
-            return [
-                ...currentQueue,
-                music
-            ];
-        });
+        setQueue(currentQueue => [
+            ...currentQueue,
+            music
+        ]);
     };
 
     const removeFromQueue = (musicId) => {
+        const index = queue.findIndex(
+            music => music.id === musicId
+        );
+
+        if (index === -1) return;
+
+        if (index === currentIndex) return;
+
         setQueue(currentQueue =>
             currentQueue.filter(
                 music => music.id !== musicId
@@ -62,92 +98,16 @@ export const AudioPlayerProvider = ({ children }) => {
 
     const clearQueue = () => {
         setQueue([]);
+        setCurrentMusic(null);
         setCurrentIndex(-1);
-    };
+        shouldPlayAfterLoad.current = false;
 
-    const loadMusic = async (music, index) => {
-
-        if (!music) return;
-
-        if (changingTrack.current) {
-            return;
-        }
-
-        changingTrack.current = true;
-
-        try {
-
-            const source = await getDriveAudioSource(
-                music.id
-            );
-
-            setCurrentMusic(music);
-            setCurrentIndex(index);
-
-            pendingPlay.current = true;
-
-            player.replace(source);
-
-        } catch (error) {
-
-            pendingPlay.current = false;
-
-            console.log(
-                "Unable to load music:",
-                error.message
-            );
-
-        } finally {
-
-            changingTrack.current = false;
-
-        }
-    };
-
-    useEffect(() => {
-
-        if (!pendingPlay.current) {
-            return;
-        }
-
-        if (!currentMusic) {
-            return;
-        }
-
-        if (status.duration <= 0) {
-            return;
-        }
-
-        pendingPlay.current = false;
-
-        player.play();
-
-    }, [
-        currentMusic,
-        status.duration
-    ]);
-
-    const playMusic = async (music) => {
-
-        const index = queue.findIndex(
-            item => item.id === music.id
-        );
-
-        if (index === -1) {
-            return;
-        }
-
-        await loadMusic(
-            music,
-            index
-        );
+        player.pause();
+        player.replace(null);
     };
 
     const togglePlayback = () => {
-
-        if (!currentMusic) {
-            return;
-        }
+        if (!currentMusic) return;
 
         if (status.playing) {
             player.pause();
@@ -161,17 +121,19 @@ export const AudioPlayerProvider = ({ children }) => {
     };
 
     const resumeMusic = () => {
+        if (!currentMusic) return;
+
         player.play();
     };
 
     const stopMusic = () => {
+        shouldPlayAfterLoad.current = false;
 
         player.pause();
+        player.seekTo(0);
 
         setCurrentMusic(null);
         setCurrentIndex(-1);
-
-        pendingPlay.current = false;
     };
 
     const seekTo = (position) => {
@@ -179,78 +141,87 @@ export const AudioPlayerProvider = ({ children }) => {
     };
 
     const playNext = async () => {
-
-        if (queue.length === 0) {
-            return;
-        }
+        if (queue.length === 0) return;
 
         const nextIndex = currentIndex + 1;
 
-        if (nextIndex >= queue.length) {
-            return;
-        }
+        if (nextIndex >= queue.length) return;
 
         const nextMusic = queue[nextIndex];
 
-        await loadMusic(
-            nextMusic,
-            nextIndex
-        );
+        await loadQueueMusic(nextMusic, nextIndex);
     };
 
     const playPrevious = async () => {
-
-        if (queue.length === 0) {
-            return;
-        }
+        if (queue.length === 0) return;
 
         const previousIndex = currentIndex - 1;
 
-        if (previousIndex < 0) {
-            return;
-        }
+        if (previousIndex < 0) return;
 
         const previousMusic = queue[previousIndex];
 
-        await loadMusic(
+        await loadQueueMusic(
             previousMusic,
             previousIndex
         );
     };
 
-    useEffect(() => {
+    const loadQueueMusic = async (music, index) => {
+        if (!music) return;
+        if (changingTrack.current) return;
 
-        if (!status.didJustFinish) {
-            return;
+        changingTrack.current = true;
+        shouldPlayAfterLoad.current = true;
+
+        try {
+            const source = await getDriveAudioSource(music.id);
+
+            setCurrentMusic(music);
+            setCurrentIndex(index);
+
+            player.replace(source);
+        } catch (error) {
+            shouldPlayAfterLoad.current = false;
+
+            console.log(
+                "Unable to load queued music:",
+                error.message
+            );
+        } finally {
+            changingTrack.current = false;
         }
+    };
+
+    useEffect(() => {
+        if (!status.didJustFinish) return;
 
         playNext();
+    }, [status.didJustFinish]);
 
-    }, [
-        status.didJustFinish
-    ]);
+    const setPlaybackQueue = (musics) => {
+        if (!Array.isArray(musics)) return;
+
+        setQueue(musics);
+    };
 
     const value = {
         currentMusic,
         status,
         currentTime,
         duration,
-
         queue,
         currentIndex,
-        setQueue,
-
+        setQueue: setPlaybackQueue,
         addToQueue,
         removeFromQueue,
         clearQueue,
-
         playMusic,
         togglePlayback,
         pauseMusic,
         resumeMusic,
         stopMusic,
         seekTo,
-
         playNext,
         playPrevious
     };
@@ -263,10 +234,7 @@ export const AudioPlayerProvider = ({ children }) => {
 };
 
 export const useAudioPlayerContext = () => {
-
-    const context = useContext(
-        AudioPlayerContext
-    );
+    const context = useContext(AudioPlayerContext);
 
     if (!context) {
         throw new Error(

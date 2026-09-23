@@ -69,26 +69,10 @@ const login = () => {
                     }}
                 >
 
-                    <View
-                        style={{
-                            width: 110,
-                            height: 110,
-                            borderRadius: 35,
-                            alignItems: "center",
-                            justifyContent: "center",
-                            backgroundColor: colors.elevated,
-
-                            borderWidth: 1,
-                            borderColor: isDark
-                                ? "rgba(255,255,255,0.08)"
-                                : "rgba(0,0,0,0.06)",
-                        }}
-                    >
-                        <Logo
-                            width={75}
-                            height={75}
-                        />
-                    </View>
+                    <Logo
+                        width={100}
+                        height={100}
+                    />
 
 
                     <ThemedText

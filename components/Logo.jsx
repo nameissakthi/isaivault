@@ -12,14 +12,14 @@ const Logo = ({ style, width = 150, height = 150, ...props }) => {
         <ThemedView>
             <Image
                 source={
-                    require("../assets/logo.png")
+                    require("../assets/images/logo.png")
                 }
 
                 style={[{
                     width: width,
                     height: height,
                     backgroundColor: colors.primary,
-                    borderRadius: 5
+                    borderRadius: 10
                 }, style]}
 
                 alt='Logo'

@@ -1,17 +1,19 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
-const WEB_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const WEB_CLIENT_ID =
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
 GoogleSignin.configure({
-    webClientId : WEB_CLIENT_ID,
-    scopes : [
-        "https://www.googleapis.com/auth/drive.readonly"
+    webClientId: WEB_CLIENT_ID,
+    scopes: [
+        "https://www.googleapis.com/auth/drive"
     ]
 });
 
 export const restoreGoogleSession = async () => {
     try {
-        const response = await GoogleSignin.signInSilently();
+        const response =
+            await GoogleSignin.signInSilently();
 
         if (!response?.data?.user) {
             return {
@@ -25,7 +27,6 @@ export const restoreGoogleSession = async () => {
             success: true,
             user: response.data.user
         };
-
     } catch (error) {
         return {
             success: false,
@@ -36,32 +37,47 @@ export const restoreGoogleSession = async () => {
 };
 
 export const loginWithGoogle = async () => {
-
     try {
-
         await GoogleSignin.hasPlayServices({
-            showPlayServicesUpdateDialog : true
-        })
+            showPlayServicesUpdateDialog: true
+        });
 
-        const response = await GoogleSignin.signIn();
+        const response =
+            await GoogleSignin.signIn();
 
         return {
-            success : true,
-            user : response.data.user,
-            idToken : response.data.idToken,
-        }
+            success: true,
+            user: response.data.user,
+            idToken: response.data.idToken
+        };
     } catch (error) {
-        console.error("Google Sign In Error : ", error.message);
+        console.error(
+            "Google Sign In Error:",
+            error.message
+        );
+
         throw new Error(error.message);
     }
 };
 
+export const getGoogleDriveToken = async () => {
+    const tokens =
+        await GoogleSignin.getTokens();
+
+    return {
+        accessToken: tokens.accessToken
+    };
+};
+
 export const logoutFromGoogle = async () => {
-    
     try {
         await GoogleSignin.signOut();
     } catch (error) {
-        console.error("Google Logout Error : ", error.message);
+        console.error(
+            "Google Logout Error:",
+            error.message
+        );
+
         throw new Error(error.message);
     }
 };
