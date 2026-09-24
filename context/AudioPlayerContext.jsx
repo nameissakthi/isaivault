@@ -123,7 +123,6 @@ export const AudioPlayerProvider = ({ children }) => {
 
         player.pause();
         player.setActiveForLockScreen(false);
-        player.replace(null);
     };
 
     const togglePlayback = () => {
@@ -152,7 +151,6 @@ export const AudioPlayerProvider = ({ children }) => {
         player.pause();
         player.seekTo(0);
         player.setActiveForLockScreen(false);
-        player.replace(null);
 
         setCurrentMusic(null);
         setCurrentIndex(-1);
