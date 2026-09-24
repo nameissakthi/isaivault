@@ -27,7 +27,12 @@
       "expo-web-browser",
       "expo-secure-store",
       "@react-native-google-signin/google-signin",
-      "expo-audio"
+      [
+        "expo-audio",
+        {
+          "enableBacgroundPlayback" : true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

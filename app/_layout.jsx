@@ -26,10 +26,11 @@ import { MiniPlayer } from "../components/components"
 
 const RootLayout = () => {
     return (
-        <AuthProvider>
-            <LibraryProvider>
-                <PlaylistProvider>
-                    <AudioPlayerProvider>
+        <AudioPlayerProvider>
+            <AuthProvider>
+                <LibraryProvider>
+                    <PlaylistProvider>
+
                         <StatusBar style="auto" />
 
                         <Stack
@@ -39,10 +40,11 @@ const RootLayout = () => {
                         />
 
                         <MiniPlayer />
-                    </AudioPlayerProvider>
-                </PlaylistProvider>
-            </LibraryProvider>
-        </AuthProvider>
+
+                    </PlaylistProvider>
+                </LibraryProvider>
+            </AuthProvider>
+        </AudioPlayerProvider>
     );
 };
 

@@ -8,7 +8,8 @@ import {
 
 import {
     useAudioPlayer,
-    useAudioPlayerStatus
+    useAudioPlayerStatus,
+    setAudioModeAsync
 } from "expo-audio";
 
 import { getDriveAudioSource } from "../services/drive/driveService";
@@ -26,6 +27,19 @@ export const AudioPlayerProvider = ({ children }) => {
     const shouldPlayAfterLoad = useRef(false);
     const changingTrack = useRef(false);
 
+    useEffect(() => {
+        setAudioModeAsync({
+            playsInSilentMode: true,
+            shouldPlayInBackground: true,
+            interruptionMode: "doNotMix"
+        }).catch(error => {
+            console.log(
+                "Audio Mode Error:",
+                error.message
+            );
+        });
+    }, []);
+
     const currentTime = status.currentTime ?? 0;
     const duration = status.duration ?? 0;
 
@@ -42,6 +56,11 @@ export const AudioPlayerProvider = ({ children }) => {
             setQueue([music]);
             setCurrentMusic(music);
             setCurrentIndex(0);
+
+            player.setActiveForLockScreen(true, {
+                title: music.name || "IsaiVault",
+                artist: "IsaiVault"
+            });
 
             player.replace(source);
         } catch (error) {
@@ -103,6 +122,7 @@ export const AudioPlayerProvider = ({ children }) => {
         shouldPlayAfterLoad.current = false;
 
         player.pause();
+        player.setActiveForLockScreen(false);
         player.replace(null);
     };
 
@@ -131,9 +151,12 @@ export const AudioPlayerProvider = ({ children }) => {
 
         player.pause();
         player.seekTo(0);
+        player.setActiveForLockScreen(false);
+        player.replace(null);
 
         setCurrentMusic(null);
         setCurrentIndex(-1);
+        setQueue([]);
     };
 
     const seekTo = (position) => {
@@ -179,6 +202,11 @@ export const AudioPlayerProvider = ({ children }) => {
 
             setCurrentMusic(music);
             setCurrentIndex(index);
+
+            player.setActiveForLockScreen(true, {
+                title: music.name || "IsaiVault",
+                artist: "IsaiVault"
+            });
 
             player.replace(source);
         } catch (error) {
