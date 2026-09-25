@@ -10,12 +10,20 @@ import {
     saveDrivePlaylists
 } from "../services/drive/driveService";
 
+import {
+    useAuth
+} from "./AuthContext";
+
 const PlaylistContext =
     createContext(null);
 
 export const PlaylistProvider = ({
     children
 }) => {
+    const {
+        isAuthenticated
+    } = useAuth();
+
     const [
         playlists,
         setPlaylists
@@ -27,8 +35,14 @@ export const PlaylistProvider = ({
     ] = useState(true);
 
     useEffect(() => {
+        if (!isAuthenticated) {
+            setPlaylists([]);
+            setIsPlaylistLoading(false);
+            return;
+        }
+
         loadPlaylists();
-    }, []);
+    }, [isAuthenticated]);
 
     const loadPlaylists = async () => {
         try {
@@ -121,6 +135,51 @@ export const PlaylistProvider = ({
         }
 
         return newPlaylist;
+    };
+
+    const renamePlaylist = async (
+        playlistId,
+        newName
+    ) => {
+        const trimmedName =
+            newName.trim();
+
+        if (!playlistId || !trimmedName) {
+            return false;
+        }
+
+        const existingPlaylist =
+            playlists.find(
+                playlist =>
+                    playlist.id !== playlistId &&
+                    playlist.name.toLowerCase() ===
+                    trimmedName.toLowerCase()
+            );
+
+        if (existingPlaylist) {
+            return false;
+        }
+
+        const updatedPlaylists =
+            playlists.map(
+                playlist => {
+                    if (
+                        playlist.id !==
+                        playlistId
+                    ) {
+                        return playlist;
+                    }
+
+                    return {
+                        ...playlist,
+                        name: trimmedName
+                    };
+                }
+            );
+
+        return await savePlaylists(
+            updatedPlaylists
+        );
     };
 
     const deletePlaylist = async (
@@ -245,6 +304,7 @@ export const PlaylistProvider = ({
         playlists,
         isPlaylistLoading,
         createPlaylist,
+        renamePlaylist,
         deletePlaylist,
         addMusicToPlaylist,
         removeMusicFromPlaylist,
