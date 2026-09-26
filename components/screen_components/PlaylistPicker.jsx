@@ -8,7 +8,8 @@ import {
     ScrollView,
     useColorScheme,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    TouchableWithoutFeedback
 } from "react-native";
 
 import { useState } from "react";
@@ -43,81 +44,101 @@ const PlaylistPicker = ({
         addMusicToPlaylist
     } = usePlaylist();
 
-    const [isCreating, setIsCreating] = useState(false);
-    const [playlistName, setPlaylistName] = useState("");
-    const [isSaving, setIsSaving] = useState(false);
+    const [isCreating, setIsCreating] =
+        useState(false);
+
+    const [playlistName, setPlaylistName] =
+        useState("");
+
+    const [isAddingMusic, setIsAddingMusic] =
+        useState(false);
+
+    const isBusy =
+        isCreating || isAddingMusic;
 
     const resetState = () => {
         setIsCreating(false);
         setPlaylistName("");
-        setIsSaving(false);
+        setIsAddingMusic(false);
     };
 
     const handleClose = () => {
+        if (isAddingMusic) {
+            return;
+        }
+
         resetState();
         onClose();
     };
 
-    const handlePlaylistPress = async (playlist) => {
-        if (!music || isSaving) return;
+    const handlePlaylistPress = async (
+        playlist
+    ) => {
+        if (!music || isBusy) {
+            return;
+        }
 
         try {
-            setIsSaving(true);
+            setIsAddingMusic(true);
 
-            const success = await addMusicToPlaylist(
-                playlist.id,
-                music
-            );
+            const success =
+                await addMusicToPlaylist(
+                    playlist.id,
+                    music
+                );
 
             if (!success) {
-                setIsSaving(false);
+                setIsAddingMusic(false);
                 return;
             }
 
-            handleClose();
+            resetState();
+            onClose();
         } catch (error) {
             console.log(
                 "Add To Playlist Error:",
                 error.message
             );
 
-            setIsSaving(false);
+            setIsAddingMusic(false);
         }
     };
 
     const handleCreatePlaylist = async () => {
-        const name = playlistName.trim();
+        const name =
+            playlistName.trim();
 
-        if (!name || isSaving) return;
+        if (!name || isBusy) {
+            return;
+        }
 
         try {
-            setIsSaving(true);
+            setIsCreating(true);
 
             const playlist =
                 await createPlaylist(name);
 
             if (!playlist) {
-                setIsSaving(false);
+                setIsCreating(false);
                 return;
             }
 
             setPlaylistName("");
             setIsCreating(false);
-            setIsSaving(false);
         } catch (error) {
             console.log(
                 "Create Playlist Error:",
                 error.message
             );
 
-            setIsSaving(false);
+            setIsCreating(false);
         }
     };
 
     return (
         <Modal
             visible={visible}
-            transparent
+            transparent={false}
             animationType="fade"
             onRequestClose={handleClose}
         >
@@ -136,7 +157,9 @@ const PlaylistPicker = ({
                 }
             >
                 <Pressable
-                    style={StyleSheet.absoluteFill}
+                    style={
+                        StyleSheet.absoluteFill
+                    }
                     onPress={handleClose}
                 />
 
@@ -149,20 +172,14 @@ const PlaylistPicker = ({
                         }
                     ]}
                 >
-                    {isSaving && (
+                    <View
+                        style={styles.header}
+                    >
                         <View
-                            style={[
-                                styles.loadingOverlay,
-                                {
-                                    backgroundColor: colors.overlay
-                                }
-                            ]}
+                            style={
+                                styles.headerText
+                            }
                         >
-                            <Loading width={"100%"} height={"100%"} />
-                        </View>
-                    )}
-                    <View style={styles.header}>
-                        <View style={styles.headerText}>
                             <Text
                                 style={[
                                     styles.title,
@@ -180,7 +197,9 @@ const PlaylistPicker = ({
                             {music?.name &&
                                 !isCreating && (
                                     <Text
-                                        numberOfLines={1}
+                                        numberOfLines={
+                                            1
+                                        }
                                         style={[
                                             styles.subtitle,
                                             {
@@ -195,12 +214,21 @@ const PlaylistPicker = ({
                         </View>
 
                         <Pressable
-                            onPress={handleClose}
+                            onPress={
+                                handleClose
+                            }
+                            disabled={
+                                isBusy
+                            }
                             style={[
                                 styles.closeButton,
                                 {
                                     backgroundColor:
-                                        colors.secondarySurface
+                                        colors.secondarySurface,
+                                    opacity:
+                                        isBusy
+                                            ? 0.5
+                                            : 1
                                 }
                             ]}
                         >
@@ -219,7 +247,11 @@ const PlaylistPicker = ({
                     </View>
 
                     {isCreating ? (
-                        <View style={styles.createContainer}>
+                        <View
+                            style={
+                                styles.createContainer
+                            }
+                        >
                             <Text
                                 style={[
                                     styles.createTitle,
@@ -241,11 +273,14 @@ const PlaylistPicker = ({
                                     }
                                 ]}
                             >
-                                Give your playlist a name
+                                Give your playlist a
+                                name
                             </Text>
 
                             <TextInput
-                                value={playlistName}
+                                value={
+                                    playlistName
+                                }
                                 onChangeText={
                                     setPlaylistName
                                 }
@@ -255,6 +290,9 @@ const PlaylistPicker = ({
                                 }
                                 autoFocus
                                 maxLength={50}
+                                editable={
+                                    !isCreating
+                                }
                                 style={[
                                     styles.input,
                                     {
@@ -279,9 +317,16 @@ const PlaylistPicker = ({
                             >
                                 <Pressable
                                     onPress={() => {
+                                        if (
+                                            isCreating
+                                        ) {
+                                            return;
+                                        }
+
                                         setIsCreating(
                                             false
                                         );
+
                                         setPlaylistName(
                                             ""
                                         );
@@ -313,7 +358,7 @@ const PlaylistPicker = ({
                                     }
                                     disabled={
                                         !playlistName.trim() ||
-                                        isSaving
+                                        isCreating
                                     }
                                     style={[
                                         styles.createButton,
@@ -322,7 +367,7 @@ const PlaylistPicker = ({
                                                 colors.primary,
                                             opacity:
                                                 !playlistName.trim() ||
-                                                    isSaving
+                                                isCreating
                                                     ? 0.45
                                                     : 1
                                         }
@@ -337,7 +382,7 @@ const PlaylistPicker = ({
                                             }
                                         ]}
                                     >
-                                        {isSaving
+                                        {isCreating
                                             ? "Creating..."
                                             : "Create"}
                                     </Text>
@@ -347,7 +392,9 @@ const PlaylistPicker = ({
                     ) : (
                         <>
                             <ScrollView
-                                style={styles.list}
+                                style={
+                                    styles.list
+                                }
                                 contentContainerStyle={
                                     styles.listContent
                                 }
@@ -355,7 +402,8 @@ const PlaylistPicker = ({
                                     false
                                 }
                             >
-                                {playlists.length === 0 ? (
+                                {playlists.length ===
+                                0 ? (
                                     <View
                                         style={[
                                             styles.emptyContainer,
@@ -408,9 +456,11 @@ const PlaylistPicker = ({
                                                 }
                                             ]}
                                         >
-                                            Create a playlist
-                                            to organize your
-                                            favorite music.
+                                            Create a
+                                            playlist to
+                                            organize your
+                                            favorite
+                                            music.
                                         </Text>
                                     </View>
                                 ) : (
@@ -426,25 +476,25 @@ const PlaylistPicker = ({
                                                     )
                                                 }
                                                 disabled={
-                                                    isSaving
+                                                    isBusy
                                                 }
                                                 style={({
                                                     pressed
                                                 }) => [
-                                                        styles.playlistItem,
-                                                        {
-                                                            backgroundColor:
-                                                                pressed
-                                                                    ? colors.secondarySurface
-                                                                    : colors.surface,
-                                                            borderColor:
-                                                                colors.border,
-                                                            opacity:
-                                                                isSaving
-                                                                    ? 0.5
-                                                                    : 1
-                                                        }
-                                                    ]}
+                                                    styles.playlistItem,
+                                                    {
+                                                        backgroundColor:
+                                                            pressed
+                                                                ? colors.secondarySurface
+                                                                : colors.surface,
+                                                        borderColor:
+                                                            colors.border,
+                                                        opacity:
+                                                            isBusy
+                                                                ? 0.5
+                                                                : 1
+                                                    }
+                                                ]}
                                             >
                                                 <View
                                                     style={[
@@ -507,7 +557,7 @@ const PlaylistPicker = ({
                                                         {playlist
                                                             .musics
                                                             .length ===
-                                                            1
+                                                        1
                                                             ? "song"
                                                             : "songs"}
                                                     </Text>
@@ -532,13 +582,22 @@ const PlaylistPicker = ({
 
                             <Pressable
                                 onPress={() =>
-                                    setIsCreating(true)
+                                    setIsCreating(
+                                        true
+                                    )
+                                }
+                                disabled={
+                                    isBusy
                                 }
                                 style={[
                                     styles.newPlaylistButton,
                                     {
                                         backgroundColor:
-                                            colors.primary
+                                            colors.primary,
+                                        opacity:
+                                            isBusy
+                                                ? 0.5
+                                                : 1
                                     }
                                 ]}
                             >
@@ -576,6 +635,24 @@ const PlaylistPicker = ({
                             </Pressable>
                         </>
                     )}
+
+                    {isAddingMusic && (
+                        <TouchableWithoutFeedback
+                            onPress={() => {}}
+                        >
+                            <View
+                                style={[
+                                    styles.loadingOverlay,
+                                    {
+                                        backgroundColor:
+                                            colors.surface
+                                    }
+                                ]}
+                            >
+                                <Loading />
+                            </View>
+                        </TouchableWithoutFeedback>
+                    )}
                 </View>
             </KeyboardAvoidingView>
         </Modal>
@@ -605,6 +682,17 @@ const styles = StyleSheet.create({
         },
         shadowOpacity: 0.25,
         shadowRadius: 18
+    },
+
+    loadingOverlay: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100
     },
 
     header: {
@@ -808,17 +896,6 @@ const styles = StyleSheet.create({
     createButtonText: {
         fontSize: 15,
         fontWeight: "700"
-    },
-
-    loadingOverlay: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100
     }
 });
 
