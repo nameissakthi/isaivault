@@ -107,12 +107,6 @@ const MusicOptionsMenu = ({
             icon: "download",
             onPress: onDownload
         },
-        {
-            title: "Delete from Drive",
-            icon: "delete",
-            onPress: onDelete,
-            danger: true
-        },
         ...(onRemoveFromPlaylist
             ? [
                 {
@@ -120,6 +114,16 @@ const MusicOptionsMenu = ({
                     icon: "playlist-remove",
                     onPress:
                         onRemoveFromPlaylist,
+                    danger: true
+                }
+            ]
+            : []),
+        ...(onDelete
+            ? [
+                {
+                    title: "Delete from Drive",
+                    icon: "delete",
+                    onPress: onDelete,
                     danger: true
                 }
             ]

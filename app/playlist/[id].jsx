@@ -4,7 +4,8 @@ import {
     View,
     Pressable,
     ScrollView,
-    TextInput
+    TextInput,
+    useColorScheme
 } from "react-native";
 
 import {
@@ -32,8 +33,21 @@ import {
     useAudioPlayerContext
 } from "../../context/AudioPlayerContext";
 
+import {
+    deleteDriveFile
+} from "../../services/drive/driveService";
+
+import Colors from "../../constants/Colors";
+
 const PlaylistDetails = () => {
     const router = useRouter();
+
+    const theme = useColorScheme();
+
+    const colors =
+        theme === "dark"
+            ? Colors.dark
+            : Colors.light;
 
     const {
         id
@@ -55,6 +69,8 @@ const PlaylistDetails = () => {
     const playlist = getPlaylist(id);
 
     const [isRenaming, setIsRenaming] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isRemovingMusic, setIsRemovingMusic] = useState(false);
 
     const [
         selectedMusic,
@@ -152,9 +168,71 @@ const PlaylistDetails = () => {
         setPlaylistMusic(null);
     };
 
+    const handleDeleteFromDrive = () => {
+        if (!selectedMusic || isDeleting) {
+            return;
+        }
+
+        const music = selectedMusic;
+
+        handleCloseMenu();
+
+        Alert.alert(
+            "Delete from Drive",
+            `Are you sure you want to permanently delete "${music.name}" from Google Drive?`,
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            setIsDeleting(true);
+
+                            await deleteDriveFile(
+                                music.id
+                            );
+
+                            const removedFromPlaylist =
+                                await removeMusicFromPlaylist(
+                                    playlist.id,
+                                    music.id
+                                );
+
+                            setIsDeleting(false);
+
+                            if (!removedFromPlaylist) {
+                                Alert.alert(
+                                    "Partially Completed",
+                                    "The file was deleted from Google Drive, but it could not be removed from this playlist."
+                                );
+                                return;
+                            }
+
+                            Alert.alert(
+                                "Deleted",
+                                "The music file was deleted from Google Drive."
+                            );
+                        } catch (error) {
+                            setIsDeleting(false);
+
+                            Alert.alert(
+                                "Delete Failed",
+                                error.message
+                            );
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const handleRemoveFromPlaylist =
         async () => {
-            if (!selectedMusic) {
+            if (!selectedMusic || isRemovingMusic) {
                 return;
             }
 
@@ -165,11 +243,16 @@ const PlaylistDetails = () => {
                 playlist.id;
 
             handleCloseMenu();
+            setIsRemovingMusic(true);
 
-            await removeMusicFromPlaylist(
-                playlistId,
-                musicId
-            );
+            try {
+                await removeMusicFromPlaylist(
+                    playlistId,
+                    musicId
+                );
+            } finally {
+                setIsRemovingMusic(false);
+            }
         };
 
     const handleOpenPlaylistMenu = () => {
@@ -233,17 +316,31 @@ const PlaylistDetails = () => {
                     text: "Delete",
                     style: "destructive",
                     onPress: async () => {
-                        const success =
-                            await deletePlaylist(
-                                playlist.id
-                            );
+                        try {
+                            setIsDeleting(true);
 
-                        if (success) {
-                            router.back();
-                        } else {
+                            const success =
+                                await deletePlaylist(
+                                    playlist.id
+                                );
+
+                            if (success) {
+                                router.back();
+                                return;
+                            }
+
+                            setIsDeleting(false);
+
                             Alert.alert(
                                 "Delete Failed",
                                 "Unable to delete the playlist."
+                            );
+                        } catch (error) {
+                            setIsDeleting(false);
+
+                            Alert.alert(
+                                "Delete Failed",
+                                error.message
                             );
                         }
                     }
@@ -253,7 +350,7 @@ const PlaylistDetails = () => {
     };
 
 
-    if (isRenaming) {
+    if (isRenaming || isDeleting || isRemovingMusic) {
         return <Loading width={180} height={180} />;
     }
 
@@ -282,12 +379,29 @@ const PlaylistDetails = () => {
                 </Pressable>
 
                 {isPlaylistMenuVisible && (
-                    <View style={styles.playlistMenu}>
+                    <View
+                        style={[
+                            styles.playlistMenu,
+                            {
+                                backgroundColor:
+                                    colors.elevated,
+                                borderColor:
+                                    theme === "dark"
+                                        ? "rgba(255,255,255,0.08)"
+                                        : "rgba(0,0,0,0.08)"
+                            }
+                        ]}
+                    >
                         <Pressable
                             style={styles.playlistMenuItem}
                             onPress={handleRenamePress}
                         >
-                            <ThemedText style={styles.playlistMenuItemText}>
+                            <ThemedText
+                                style={[
+                                    styles.playlistMenuItemText,
+                                    { color: colors.text }
+                                ]}
+                            >
                                 Rename
                             </ThemedText>
                         </Pressable>
@@ -299,7 +413,8 @@ const PlaylistDetails = () => {
                             <ThemedText
                                 style={[
                                     styles.playlistMenuItemText,
-                                    styles.deleteText
+                                    styles.deleteText,
+                                    { color: "#ff5c5c" }
                                 ]}
                             >
                                 Delete
@@ -450,6 +565,9 @@ const PlaylistDetails = () => {
                     }
                 }}
                 onDelete={
+                    handleDeleteFromDrive
+                }
+                onRemoveFromPlaylist={
                     handleRemoveFromPlaylist
                 }
             />
@@ -465,9 +583,31 @@ const PlaylistDetails = () => {
             />
 
             {isRenameVisible && (
-                <View style={styles.renameOverlay}>
-                    <View style={styles.renameModal}>
-                        <ThemedText style={styles.renameTitle}>
+                <View
+                    style={[
+                        styles.renameOverlay,
+                        {
+                            backgroundColor: "rgba(0, 0, 0, 0.55)"
+                        }
+                    ]}
+                >
+                    <View
+                        style={[
+                            styles.renameModal,
+                            {
+                                backgroundColor: colors.elevated,
+                                borderColor: theme === "dark"
+                                    ? "rgba(255,255,255,0.08)"
+                                    : "rgba(0,0,0,0.08)"
+                            }
+                        ]}
+                    >
+                        <ThemedText
+                            style={[
+                                styles.renameTitle,
+                                { color: colors.text }
+                            ]}
+                        >
                             Rename Playlist
                         </ThemedText>
 
@@ -475,8 +615,17 @@ const PlaylistDetails = () => {
                             value={renameText}
                             onChangeText={setRenameText}
                             placeholder="Playlist name"
-                            placeholderTextColor="rgba(128, 128, 128, 0.7)"
-                            style={styles.renameInput}
+                            placeholderTextColor={colors.secondaryText}
+                            style={[
+                                styles.renameInput,
+                                {
+                                    color: colors.text,
+                                    backgroundColor: colors.surface,
+                                    borderColor: theme === "dark"
+                                        ? "rgba(255,255,255,0.08)"
+                                        : "rgba(0,0,0,0.08)"
+                                }
+                            ]}
                             autoFocus
                             selectTextOnFocus
                         />
@@ -488,16 +637,25 @@ const PlaylistDetails = () => {
                                     setIsRenameVisible(false)
                                 }
                             >
-                                <ThemedText>
+                                <ThemedText
+                                    style={{ color: colors.text }}
+                                >
                                     Cancel
                                 </ThemedText>
                             </Pressable>
 
                             <Pressable
-                                style={styles.renameSaveButton}
+                                style={[
+                                    styles.renameSaveButton,
+                                    {
+                                        backgroundColor: colors.surface
+                                    }
+                                ]}
                                 onPress={handleRename}
                             >
-                                <ThemedText>
+                                <ThemedText
+                                    style={{ color: colors.text }}
+                                >
                                     Save
                                 </ThemedText>
                             </Pressable>
@@ -557,7 +715,7 @@ const styles = StyleSheet.create({
         width: 150,
         borderRadius: 14,
         paddingVertical: 6,
-        backgroundColor: "rgba(60, 60, 60, 0.98)",
+        borderWidth: 1,
         zIndex: 20,
         elevation: 8
     },
@@ -737,7 +895,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 24,
-        backgroundColor: "rgba(0, 0, 0, 0.55)",
         zIndex: 100,
         elevation: 100
     },
@@ -747,7 +904,7 @@ const styles = StyleSheet.create({
         maxWidth: 360,
         borderRadius: 18,
         padding: 20,
-        backgroundColor: "rgba(45, 45, 45, 0.98)"
+        borderWidth: 1
     },
 
     renameTitle: {
@@ -761,8 +918,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: 14,
         fontSize: 16,
-        color: "#ffffff",
-        backgroundColor: "rgba(128, 128, 128, 0.15)"
+        borderWidth: 1
     },
 
     renameActions: {

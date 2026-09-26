@@ -15,6 +15,8 @@ import { useState } from "react";
 
 import { usePlaylist } from "../../context/PlaylistContext";
 
+import Loading from "../Loading";
+
 const PlaylistPicker = ({
     visible,
     music,
@@ -147,6 +149,18 @@ const PlaylistPicker = ({
                         }
                     ]}
                 >
+                    {isSaving && (
+                        <View
+                            style={[
+                                styles.loadingOverlay,
+                                {
+                                    backgroundColor: colors.overlay
+                                }
+                            ]}
+                        >
+                            <Loading width={"100%"} height={"100%"} />
+                        </View>
+                    )}
                     <View style={styles.header}>
                         <View style={styles.headerText}>
                             <Text
@@ -794,6 +808,17 @@ const styles = StyleSheet.create({
     createButtonText: {
         fontSize: 15,
         fontWeight: "700"
+    },
+
+    loadingOverlay: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 100
     }
 });
 

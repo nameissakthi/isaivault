@@ -197,31 +197,39 @@ export const PlaylistProvider = ({
         );
     };
 
-    const addMusicToPlaylist =
-        async (
-            playlistId,
-            music
-        ) => {
-            if (
-                !playlistId ||
-                !music
-            ) {
+    const addMusicToPlaylist = async (
+        playlistId,
+        music
+    ) => {
+        if (!playlistId || !music) {
+            return false;
+        }
+
+        try {
+            const currentPlaylists =
+                await getDrivePlaylists();
+
+            if (!Array.isArray(currentPlaylists)) {
                 return false;
             }
 
             const playlistExists =
-                playlists.some(
+                currentPlaylists.some(
                     playlist =>
-                        playlist.id ===
-                        playlistId
+                        playlist.id === playlistId
                 );
 
             if (!playlistExists) {
+                console.log(
+                    "Playlist not found:",
+                    playlistId
+                );
+
                 return false;
             }
 
             const updatedPlaylists =
-                playlists.map(
+                currentPlaylists.map(
                     playlist => {
                         if (
                             playlist.id !==
@@ -230,33 +238,53 @@ export const PlaylistProvider = ({
                             return playlist;
                         }
 
+                        const existingMusics =
+                            Array.isArray(
+                                playlist.musics
+                            )
+                                ? playlist.musics
+                                : [];
+
                         const alreadyExists =
-                            playlist.musics.some(
+                            existingMusics.some(
                                 item =>
                                     item.id ===
                                     music.id
                             );
 
-                        if (
-                            alreadyExists
-                        ) {
+                        if (alreadyExists) {
                             return playlist;
                         }
 
                         return {
                             ...playlist,
                             musics: [
-                                ...playlist.musics,
+                                ...existingMusics,
                                 music
                             ]
                         };
                     }
                 );
 
-            return await savePlaylists(
-                updatedPlaylists
+            const saved =
+                await savePlaylists(
+                    updatedPlaylists
+                );
+
+            if (!saved) {
+                return false;
+            }
+
+            return true;
+        } catch (error) {
+            console.log(
+                "Add Music To Playlist Error:",
+                error.message
             );
-        };
+
+            return false;
+        }
+    };
 
     const removeMusicFromPlaylist =
         async (

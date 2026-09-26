@@ -218,7 +218,7 @@ const findPlaylistsFile = async (
     );
 
     const response = await fetch(
-        `${DRIVE_API_URL}/files?q=${query}&pageSize=10&fields=files(id,name,mimeType)`,
+        `${DRIVE_API_URL}/files?q=${query}&pageSize=100&orderBy=modifiedTime desc&fields=files(id,name,mimeType,modifiedTime)`,
         {
             headers: {
                 Authorization:

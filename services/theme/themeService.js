@@ -7,12 +7,8 @@ export const getSavedTheme = async () => {
     try {
         const theme = await AsyncStorage.getItem(THEME_KEY);
 
-        if (theme === "light" || theme === "dark") {
-            Appearance.setColorScheme(theme);
-            return theme;
-        }
+        Appearance.setColorScheme(theme);
 
-        return null;
     } catch (error) {
         console.log("Theme Load Error:", error.message);
         return null;

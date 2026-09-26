@@ -11,7 +11,8 @@ import {
     MusicCard,
     MusicOptionsMenu,
     ThemedText,
-    ThemedView
+    ThemedView,
+    PlaylistPicker
 } from "../../components/components";
 
 import { useLibrary } from "../../context/LibraryContext";
@@ -32,8 +33,9 @@ import {
 
 const index = () => {
     const [musics, setMusics] = useState([]);
-    const [selectedMusic, setSelectedMusic] =
-        useState(null);
+    const [selectedMusic, setSelectedMusic] = useState(null);
+    const [playlistMusic, setPlaylistMusic] = useState(null);
+    const [isPlaylistPickerVisible, setIsPlaylistPickerVisible] = useState(false);
 
     const {
         getFilesFromGoogleDrive,
@@ -216,6 +218,15 @@ const index = () => {
         );
     };
 
+    const handleAddToPlaylist = () => {
+        if (!selectedMusic) {
+            return;
+        }
+
+        setPlaylistMusic(selectedMusic);
+        setIsPlaylistPickerVisible(true);
+    };
+
     return (
         <ThemedView
             safe
@@ -376,14 +387,19 @@ const index = () => {
                 onAddToQueue={() =>
                     addToQueue(selectedMusic)
                 }
-                onAddToPlaylist={() => {
-                    console.log(
-                        "Add to playlist:",
-                        selectedMusic
-                    );
-                }}
+                onAddToPlaylist={handleAddToPlaylist}
                 onDownload={handleDownload}
                 onDelete={handleDelete}
+            />
+
+            <PlaylistPicker
+                visible={isPlaylistPickerVisible}
+                music={playlistMusic}
+                onClose={() => {
+                    setIsPlaylistPickerVisible(false);
+                    setPlaylistMusic(null);
+                    setSelectedMusic(null);
+                }}
             />
         </ThemedView>
     );
