@@ -129,22 +129,18 @@ const PlaylistDetails = () => {
     }
 
     const handlePlayAll = async () => {
-        if (playlist.musics.length === 0) {
-            return;
-        }
-
-        setQueue(playlist.musics);
+        if (!playlist?.musics?.length) return;
 
         await playMusic(
-            playlist.musics[0]
+            playlist.musics[0],
+            playlist.musics
         );
     };
 
-    const handleMusicPress = async music => {
-        setQueue(playlist.musics);
-
-        await playMusic(music);
+    const handleMusicPress = async (music) => {
+        await playMusic(music, playlist.musics);
     };
+
 
     const handleOpenMenu = music => {
         setSelectedMusic(music);

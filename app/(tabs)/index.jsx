@@ -1,408 +1,298 @@
-import { useEffect, useState, useRef } from "react";
+import {
+    useEffect,
+    useState
+} from "react";
 
 import {
-    Alert,
-    Animated,
-    useColorScheme,
-    View
+    View,
+    Text,
+    StyleSheet,
+    ScrollView,
+    Pressable,
+    useColorScheme
 } from "react-native";
+
+import { useRouter } from "expo-router";
+
+import { useAuth } from "../../context/AuthContext";
+import { useLibrary } from "../../context/LibraryContext";
+import { useAudioPlayerContext } from "../../context/AudioPlayerContext";
+
+import Colors from "../../constants/Colors";
 
 import {
     MusicCard,
     MusicOptionsMenu,
-    ThemedText,
-    ThemedView,
     PlaylistPicker
 } from "../../components/components";
 
-import { useLibrary } from "../../context/LibraryContext";
-import { useAuth } from "../../context/AuthContext";
-import Colors from "../../constants/Colors";
+const Home = () => {
+    const router = useRouter();
 
-import {
-    useAudioPlayerContext
-} from "../../context/AudioPlayerContext";
+    const colorScheme = useColorScheme();
 
-import {
-    downloadMusicToLocal
-} from "../../services/local/localMusicService";
+    const colors = Colors[
+        colorScheme === "dark" ? "dark" : "light"
+    ];
 
-import {
-    deleteDriveFile
-} from "../../services/drive/driveService";
-
-const index = () => {
-    const [musics, setMusics] = useState([]);
-    const [selectedMusic, setSelectedMusic] = useState(null);
-    const [playlistMusic, setPlaylistMusic] = useState(null);
-    const [isPlaylistPickerVisible, setIsPlaylistPickerVisible] = useState(false);
+    const { user } = useAuth();
 
     const {
-        getFilesFromGoogleDrive,
-        isLibraryLoading
+        isLibraryLoading,
+        getFilesFromGoogleDrive
     } = useLibrary();
 
     const {
         playMusic,
-        setQueue,
         addToQueue
     } = useAudioPlayerContext();
 
-    const { user } = useAuth();
-
-    const theme = useColorScheme();
-
-    const colors = theme === "dark"
-        ? Colors.dark
-        : Colors.light;
-
-    const scrollY =
-        useRef(
-            new Animated.Value(0)
-        ).current;
+    const [musics, setMusics] = useState([]);
+    const [selectedMusic, setSelectedMusic] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isPlaylistPickerVisible, setIsPlaylistPickerVisible] = useState(false);
 
     useEffect(() => {
-        if (isLibraryLoading) {
-            return;
-        }
+        if (isLibraryLoading) return;
 
-        const loadDriveFiles = async () => {
-            try {
-                const files =
-                    await getFilesFromGoogleDrive();
-
-                setMusics(files);
-                setQueue(files);
-            } catch (error) {
-                console.log(
-                    error.message
-                );
-            }
-        };
-
-        loadDriveFiles();
+        loadMusic();
     }, [isLibraryLoading]);
 
-    const headerHeight =
-        scrollY.interpolate({
-            inputRange: [0, 100],
-            outputRange: [145, 70],
-            extrapolate: "clamp"
-        });
-
-    const imageSize =
-        scrollY.interpolate({
-            inputRange: [0, 100],
-            outputRange: [72, 38],
-            extrapolate: "clamp"
-        });
-
-    const imageRadius =
-        scrollY.interpolate({
-            inputRange: [0, 100],
-            outputRange: [36, 19],
-            extrapolate: "clamp"
-        });
-
-    const nameSize =
-        scrollY.interpolate({
-            inputRange: [0, 100],
-            outputRange: [26, 16],
-            extrapolate: "clamp"
-        });
-
-    const nameWeight =
-        scrollY.interpolate({
-            inputRange: [0, 100],
-            outputRange: [800, 600],
-            extrapolate: "clamp"
-        });
-
-    const imageTranslateY =
-        scrollY.interpolate({
-            inputRange: [0, 100],
-            outputRange: [0, -2],
-            extrapolate: "clamp"
-        });
-
-    const subtitleOpacity =
-        scrollY.interpolate({
-            inputRange: [0, 60],
-            outputRange: [1, 0],
-            extrapolate: "clamp"
-        });
-
-    const handleDownload = async () => {
-        if (!selectedMusic) {
-            return;
-        }
-
+    const loadMusic = async () => {
         try {
-            const uri =
-                await downloadMusicToLocal(
-                    selectedMusic
-                );
+            setIsLoading(true);
 
-            console.log(
-                "Downloaded to:",
-                uri
-            );
+            const files = await getFilesFromGoogleDrive();
 
-            Alert.alert(
-                "Download Complete",
-                `${selectedMusic.name} has been saved to the IsaiVault folder.`
-            );
+            setMusics(files);
         } catch (error) {
             console.log(
-                "Download Error:",
+                "Unable to load music:",
                 error.message
             );
-
-            Alert.alert(
-                "Download Failed",
-                error.message
-            );
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    const handleDelete = async () => {
-        if (!selectedMusic) {
-            return;
-        }
-
-        Alert.alert(
-            "Delete Music",
-            `Are you sure you want to delete "${selectedMusic.name}" from Google Drive?`,
-            [
-                {
-                    text: "Cancel",
-                    style: "cancel"
-                },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        try {
-                            await deleteDriveFile(
-                                selectedMusic.id
-                            );
-
-                            setMusics(current =>
-                                current.filter(
-                                    music =>
-                                        music.id !==
-                                        selectedMusic.id
-                                )
-                            );
-
-                            setSelectedMusic(null);
-
-                            Alert.alert(
-                                "Deleted",
-                                `${selectedMusic.name} has been deleted from Google Drive.`
-                            );
-                        } catch (error) {
-                            console.log(
-                                "Delete Error:",
-                                error.message
-                            );
-
-                            Alert.alert(
-                                "Delete Failed",
-                                error.message
-                            );
-                        }
-                    }
-                }
-            ]
-        );
+    const handlePlayMusic = async music => {
+        await playMusic(music, musics);
     };
 
-    const handleAddToPlaylist = () => {
-        if (!selectedMusic) {
-            return;
-        }
+    const handleAddToQueue = () => {
+        if (!selectedMusic) return;
 
-        setPlaylistMusic(selectedMusic);
-        setIsPlaylistPickerVisible(true);
+        addToQueue(selectedMusic);
     };
 
     return (
-        <ThemedView
-            safe
-            style={{
-                flex: 1
-            }}
-        >
-            <Animated.View
-                style={{
-                    height: headerHeight,
-                    paddingHorizontal: 20,
-                    justifyContent: "flex-end",
-                    paddingBottom: 16,
-                    backgroundColor:
-                        colors.background,
-                    zIndex: 10
-                }}
-            >
-                <Animated.View
-                    style={{
-                        flexDirection: "row",
-                        alignItems: "center",
-                        transform: [
-                            {
-                                translateY:
-                                    imageTranslateY
-                            }
-                        ]
-                    }}
-                >
-                    <Animated.Image
-                        source={{
-                            uri: user?.photo
-                        }}
-                        style={{
-                            width: imageSize,
-                            height: imageSize,
-                            borderRadius:
-                                imageRadius,
-                            marginRight: 12
-                        }}
-                    />
-
-                    <View
-                        style={{
-                            flex: 1
-                        }}
-                    >
-                        <Animated.Text
-                            numberOfLines={1}
-                            style={{
-                                color: colors.text,
-                                fontSize: nameSize,
-                                fontWeight:
-                                    nameWeight
-                            }}
-                        >
-                            Hello, {user?.name}
-                        </Animated.Text>
-
-                        <Animated.Text
-                            style={{
-                                color:
-                                    colors.textSecondary,
-                                fontSize: 12,
-                                marginTop: 3,
-                                opacity:
-                                    subtitleOpacity
-                            }}
-                        >
-                            Your music library
-                        </Animated.Text>
-                    </View>
-                </Animated.View>
-            </Animated.View>
-
-            <Animated.ScrollView
-                showsVerticalScrollIndicator={
-                    false
+        <View
+            style={[
+                styles.container,
+                {
+                    backgroundColor: colors.background
                 }
-                contentContainerStyle={{
-                    paddingHorizontal: 20,
-                    paddingTop: 14,
-                    paddingBottom: 110
-                }}
-                scrollEventThrottle={16}
-                onScroll={Animated.event(
-                    [
-                        {
-                            nativeEvent: {
-                                contentOffset: {
-                                    y: scrollY
-                                }
-                            }
-                        }
-                    ],
-                    {
-                        useNativeDriver: false
-                    }
-                )}
+            ]}
+        >
+            <ScrollView
+                contentContainerStyle={styles.content}
+                showsVerticalScrollIndicator={false}
             >
-                <ThemedView
-                    style={{
-                        marginBottom: 14
-                    }}
-                >
-                    <ThemedText
-                        style={{
-                            fontSize: 21,
-                            fontWeight: "800"
-                        }}
+                <View style={styles.header}>
+                    <View>
+                        <Text
+                            style={[
+                                styles.greeting,
+                                {
+                                    color: colors.text
+                                }
+                            ]}
+                        >
+                            Hello
+                        </Text>
+
+                        <Text
+                            style={[
+                                styles.username,
+                                {
+                                    color: colors.text
+                                }
+                            ]}
+                            numberOfLines={1}
+                        >
+                            {user?.name || "Music Lover"}
+                        </Text>
+                    </View>
+
+                    <Pressable
+                        onPress={() => router.push("/(tabs)/settings")}
+                        style={[
+                            styles.profile,
+                            {
+                                backgroundColor: colors.card
+                            }
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.profileText,
+                                {
+                                    color: colors.text
+                                }
+                            ]}
+                        >
+                            {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                        </Text>
+                    </Pressable>
+                </View>
+
+                <View style={styles.titleContainer}>
+                    <Text
+                        style={[
+                            styles.title,
+                            {
+                                color: colors.text
+                            }
+                        ]}
                     >
                         Your Music
-                    </ThemedText>
+                    </Text>
 
-                    <ThemedText
-                        style={{
-                            fontSize: 13,
-                            color:
-                                colors.textSecondary,
-                            marginTop: 4
-                        }}
+                    <Text
+                        style={[
+                            styles.count,
+                            {
+                                color: colors.secondaryText
+                            }
+                        ]}
                     >
-                        {musics.length}{" "}
-                        {musics.length === 1
-                            ? "song"
-                            : "songs"}
-                    </ThemedText>
-                </ThemedView>
+                        {musics.length} songs
+                    </Text>
+                </View>
 
-                {musics.map((music) => {
-                    if (!music) {
-                        return null;
-                    }
-
-                    return (
-                        <MusicCard
-                            key={music.id}
-                            name={music.name}
-                            onPress={() =>
-                                playMusic(music)
-                            }
-                            onMenuPress={() =>
-                                setSelectedMusic(
-                                    music
-                                )
-                            }
-                        />
-                    );
-                })}
-            </Animated.ScrollView>
+                {isLoading ? (
+                    <View style={styles.emptyContainer}>
+                        <Text
+                            style={[
+                                styles.emptyText,
+                                {
+                                    color: colors.secondaryText
+                                }
+                            ]}
+                        >
+                            Loading music...
+                        </Text>
+                    </View>
+                ) : musics.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Text
+                            style={[
+                                styles.emptyText,
+                                {
+                                    color: colors.secondaryText
+                                }
+                            ]}
+                        >
+                            No music found
+                        </Text>
+                    </View>
+                ) : (
+                    <View style={styles.musicList}>
+                        {musics.map(music => (
+                            <MusicCard
+                                key={music.id}
+                                name={music.name}
+                                onPress={() => handlePlayMusic(music)}
+                                onMenuPress={() => setSelectedMusic(music)}
+                            />
+                        ))}
+                    </View>
+                )}
+            </ScrollView>
 
             <MusicOptionsMenu
                 visible={selectedMusic !== null}
-                onClose={() => {
-                    setSelectedMusic(null);
+                onClose={() => setSelectedMusic(null)}
+                onAddToQueue={handleAddToQueue}
+                onAddToPlaylist={() => setIsPlaylistPickerVisible(true)}
+                onDownload={() => {
+                    console.log("Download:", selectedMusic);
                 }}
-                onAddToQueue={() =>
-                    addToQueue(selectedMusic)
-                }
-                onAddToPlaylist={handleAddToPlaylist}
-                onDownload={handleDownload}
-                onDelete={handleDelete}
+                onDelete={() => {
+                    console.log("Delete:", selectedMusic);
+                }}
             />
 
             <PlaylistPicker
                 visible={isPlaylistPickerVisible}
-                music={playlistMusic}
+                music={selectedMusic}
                 onClose={() => {
                     setIsPlaylistPickerVisible(false);
-                    setPlaylistMusic(null);
                     setSelectedMusic(null);
                 }}
             />
-        </ThemedView>
+        </View>
     );
 };
 
-export default index;
+const styles = StyleSheet.create({
+    container: {
+        flex: 1
+    },
+    content: {
+        paddingHorizontal: 20,
+        paddingTop: 60,
+        paddingBottom: 140
+    },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 30
+    },
+    greeting: {
+        fontSize: 15,
+        opacity: 0.7
+    },
+    username: {
+        fontSize: 25,
+        fontWeight: "700",
+        marginTop: 3,
+        maxWidth: 250
+    },
+    profile: {
+        width: 46,
+        height: 46,
+        borderRadius: 23,
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    profileText: {
+        fontSize: 18,
+        fontWeight: "700"
+    },
+    titleContainer: {
+        marginBottom: 18
+    },
+    title: {
+        fontSize: 23,
+        fontWeight: "700"
+    },
+    count: {
+        fontSize: 13,
+        marginTop: 4
+    },
+    musicList: {
+        gap: 12
+    },
+    emptyContainer: {
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: 80
+    },
+    emptyText: {
+        fontSize: 15
+    }
+});
+
+export default Home;

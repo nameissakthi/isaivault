@@ -6,14 +6,13 @@ import {
 } from "react-native";
 
 import {
-    useEffect,
-    useRef
-} from "react";
-
-import {
     useRouter,
     useSegments
 } from "expo-router";
+
+import {
+    useRef
+} from "react";
 
 import {
     MaterialDesignIcons
@@ -34,7 +33,6 @@ const MiniPlayer = () => {
 
     const router = useRouter();
     const segments = useSegments();
-
     const openingPlayer = useRef(false);
 
     const {
@@ -45,20 +43,13 @@ const MiniPlayer = () => {
         togglePlayback
     } = useAudioPlayerContext();
 
-    const isPlayerScreen =
-        segments.includes("(player)");
-
-    useEffect(() => {
-        if (!isPlayerScreen) {
-            openingPlayer.current = false;
-        }
-    }, [isPlayerScreen]);
+    const isFullPlayerScreen = segments.includes("(player)");
 
     const progress = duration > 0
-        ? currentTime / duration
+        ? Math.min(currentTime / duration, 1)
         : 0;
 
-    if (!currentMusic || isPlayerScreen) {
+    if (!currentMusic || isFullPlayerScreen) {
         return null;
     }
 
@@ -70,6 +61,10 @@ const MiniPlayer = () => {
         openingPlayer.current = true;
 
         router.push("/(player)");
+
+        setTimeout(() => {
+            openingPlayer.current = false;
+        }, 500);
     };
 
     return (
@@ -106,9 +101,7 @@ const MiniPlayer = () => {
                     flex: 1,
                     flexDirection: "row",
                     alignItems: "center",
-                    opacity: openingPlayer.current
-                        ? 0.6
-                        : 1
+                    opacity: openingPlayer.current ? 0.6 : 1
                 }}
             >
                 <View
@@ -169,10 +162,7 @@ const MiniPlayer = () => {
                         <View
                             style={{
                                 height: "100%",
-                                width: `${Math.min(
-                                    progress,
-                                    1
-                                ) * 100}%`,
+                                width: `${progress * 100}%`,
                                 backgroundColor: colors.text,
                                 borderRadius: 10
                             }}
@@ -190,17 +180,11 @@ const MiniPlayer = () => {
                     borderRadius: 22,
                     alignItems: "center",
                     justifyContent: "center",
-                    opacity: openingPlayer.current
-                        ? 0.6
-                        : 1
+                    opacity: openingPlayer.current ? 0.6 : 1
                 }}
             >
                 <MaterialDesignIcons
-                    name={
-                        status.playing
-                            ? "pause"
-                            : "play"
-                    }
+                    name={status.playing ? "pause" : "play"}
                     size={27}
                     color={colors.text}
                 />

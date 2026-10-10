@@ -28,7 +28,8 @@ import {
 
 import {
     MusicOptionsMenu,
-    PlaylistPicker
+    PlaylistPicker,
+    QueueSheet
 } from "../../components/components";
 
 import Colors from "../../constants/Colors";
@@ -54,8 +55,7 @@ const Player = () => {
 
     const router = useRouter();
 
-    const [progressWidth, setProgressWidth] =
-        useState(0);
+    const [progressWidth, setProgressWidth] = useState(0);
 
     const [
         isMusicOptionsVisible,
@@ -65,6 +65,11 @@ const Player = () => {
     const [
         isPlaylistPickerVisible,
         setIsPlaylistPickerVisible
+    ] = useState(false);
+
+    const [
+        isQueueVisible,
+        setIsQueueVisible
     ] = useState(false);
 
     const {
@@ -83,20 +88,14 @@ const Player = () => {
         ? currentTime / duration
         : 0;
 
-    const handleSeek = (event) => {
-        if (!progressWidth || duration <= 0) {
-            return;
-        }
+    const handleSeek = event => {
+        if (!progressWidth || duration <= 0) return;
 
-        const { locationX } =
-            event.nativeEvent;
+        const { locationX } = event.nativeEvent;
 
         const position = Math.max(
             0,
-            Math.min(
-                1,
-                locationX / progressWidth
-            )
+            Math.min(1, locationX / progressWidth)
         );
 
         seekTo(position * duration);
@@ -110,47 +109,36 @@ const Player = () => {
         setIsMusicOptionsVisible(false);
     };
 
+    const handleOpenQueue = () => {
+        setIsQueueVisible(true);
+    };
+
     const handleAddToQueue = () => {
-        if (!currentMusic) {
-            return;
-        }
+        if (!currentMusic) return;
 
         addToQueue(currentMusic);
     };
 
     const handleAddToPlaylist = () => {
-        if (!currentMusic) {
-            return;
-        }
+        if (!currentMusic) return;
 
         setIsPlaylistPickerVisible(true);
     };
 
     const handleDownload = async () => {
-        if (!currentMusic) {
-            return;
-        }
+        if (!currentMusic) return;
 
         try {
-            const uri =
-                await downloadMusicToLocal(
-                    currentMusic
-                );
+            const uri = await downloadMusicToLocal(currentMusic);
 
             Alert.alert(
                 "Download Complete",
                 `${currentMusic.name} has been saved to the IsaiVault folder.`
             );
 
-            console.log(
-                "Downloaded to:",
-                uri
-            );
+            console.log("Downloaded to:", uri);
         } catch (error) {
-            console.log(
-                "Download Error:",
-                error.message
-            );
+            console.log("Download Error:", error.message);
 
             Alert.alert(
                 "Download Failed",
@@ -160,9 +148,7 @@ const Player = () => {
     };
 
     const handleDelete = () => {
-        if (!currentMusic) {
-            return;
-        }
+        if (!currentMusic) return;
 
         Alert.alert(
             "Delete Music",
@@ -177,17 +163,20 @@ const Player = () => {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await deleteDriveFile(
-                                currentMusic.id
-                            );
+                            await deleteDriveFile(currentMusic.id);
 
                             Alert.alert(
                                 "Deleted",
-                                `${currentMusic.name} has been deleted from Google Drive.`
+                                "The music file has been deleted from Google Drive."
                             );
 
                             router.back();
                         } catch (error) {
+                            console.log(
+                                "Delete Error:",
+                                error.message
+                            );
+
                             Alert.alert(
                                 "Delete Failed",
                                 error.message
@@ -204,8 +193,7 @@ const Player = () => {
             <SafeAreaView
                 style={{
                     flex: 1,
-                    backgroundColor:
-                        colors.background,
+                    backgroundColor: colors.background,
                     alignItems: "center",
                     justifyContent: "center"
                 }}
@@ -227,8 +215,7 @@ const Player = () => {
             <SafeAreaView
                 style={{
                     flex: 1,
-                    backgroundColor:
-                        colors.background,
+                    backgroundColor: colors.background,
                     paddingHorizontal: 24
                 }}
             >
@@ -237,8 +224,7 @@ const Player = () => {
                         height: 64,
                         flexDirection: "row",
                         alignItems: "center",
-                        justifyContent:
-                            "space-between"
+                        justifyContent: "space-between"
                     }}
                 >
                     <Pressable
@@ -248,8 +234,7 @@ const Player = () => {
                             width: 44,
                             height: 44,
                             alignItems: "center",
-                            justifyContent:
-                                "center"
+                            justifyContent: "center"
                         }}
                     >
                         <MaterialDesignIcons
@@ -261,8 +246,7 @@ const Player = () => {
 
                     <Text
                         style={{
-                            color:
-                                colors.textSecondary,
+                            color: colors.textSecondary,
                             fontSize: 14,
                             fontWeight: "600"
                         }}
@@ -277,8 +261,7 @@ const Player = () => {
                             width: 44,
                             height: 44,
                             alignItems: "center",
-                            justifyContent:
-                                "center"
+                            justifyContent: "center"
                         }}
                     >
                         <MaterialDesignIcons
@@ -302,11 +285,9 @@ const Player = () => {
                             maxWidth: 360,
                             alignSelf: "center",
                             borderRadius: 28,
-                            backgroundColor:
-                                colors.elevated,
+                            backgroundColor: colors.elevated,
                             alignItems: "center",
-                            justifyContent:
-                                "center"
+                            justifyContent: "center"
                         }}
                     >
                         <MaterialDesignIcons
@@ -331,8 +312,7 @@ const Player = () => {
 
                     <Text
                         style={{
-                            color:
-                                colors.textSecondary,
+                            color: colors.textSecondary,
                             fontSize: 14,
                             marginTop: 8,
                             textAlign: "center"
@@ -341,34 +321,26 @@ const Player = () => {
                         Audio
                     </Text>
 
-                    <View
-                        style={{
-                            marginTop: 32
-                        }}
-                    >
+                    <View style={{ marginTop: 32 }}>
                         <Pressable
                             onPress={handleSeek}
-                            onLayout={(event) => {
+                            onLayout={event => {
                                 setProgressWidth(
-                                    event.nativeEvent
-                                        .layout.width
+                                    event.nativeEvent.layout.width
                                 );
                             }}
                             style={{
                                 height: 5,
                                 borderRadius: 10,
-                                backgroundColor:
-                                    colors.surface,
+                                backgroundColor: colors.surface,
                                 overflow: "hidden"
                             }}
                         >
                             <View
                                 style={{
                                     height: "100%",
-                                    width:
-                                        `${progress * 100}%`,
-                                    backgroundColor:
-                                        colors.text,
+                                    width: `${progress * 100}%`,
+                                    backgroundColor: colors.text,
                                     borderRadius: 10
                                 }}
                             />
@@ -376,35 +348,27 @@ const Player = () => {
 
                         <View
                             style={{
-                                flexDirection:
-                                    "row",
-                                justifyContent:
-                                    "space-between",
+                                flexDirection: "row",
+                                justifyContent: "space-between",
                                 marginTop: 8
                             }}
                         >
                             <Text
                                 style={{
-                                    color:
-                                        colors.textSecondary,
+                                    color: colors.textSecondary,
                                     fontSize: 12
                                 }}
                             >
-                                {formatTime(
-                                    currentTime
-                                )}
+                                {formatTime(currentTime)}
                             </Text>
 
                             <Text
                                 style={{
-                                    color:
-                                        colors.textSecondary,
+                                    color: colors.textSecondary,
                                     fontSize: 12
                                 }}
                             >
-                                {formatTime(
-                                    duration
-                                )}
+                                {formatTime(duration)}
                             </Text>
                         </View>
                     </View>
@@ -422,10 +386,8 @@ const Player = () => {
                             style={{
                                 width: 54,
                                 height: 54,
-                                alignItems:
-                                    "center",
-                                justifyContent:
-                                    "center"
+                                alignItems: "center",
+                                justifyContent: "center"
                             }}
                         >
                             <MaterialDesignIcons
@@ -441,24 +403,15 @@ const Player = () => {
                                 width: 68,
                                 height: 68,
                                 borderRadius: 34,
-                                alignItems:
-                                    "center",
-                                justifyContent:
-                                    "center",
-                                backgroundColor:
-                                    colors.text
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: colors.text
                             }}
                         >
                             <MaterialDesignIcons
-                                name={
-                                    status.playing
-                                        ? "pause"
-                                        : "play"
-                                }
+                                name={status.playing ? "pause" : "play"}
                                 size={34}
-                                color={
-                                    colors.background
-                                }
+                                color={colors.background}
                             />
                         </Pressable>
 
@@ -467,10 +420,8 @@ const Player = () => {
                             style={{
                                 width: 54,
                                 height: 54,
-                                alignItems:
-                                    "center",
-                                justifyContent:
-                                    "center"
+                                alignItems: "center",
+                                justifyContent: "center"
                             }}
                         >
                             <MaterialDesignIcons
@@ -487,20 +438,24 @@ const Player = () => {
                 visible={isMusicOptionsVisible}
                 onClose={handleCloseOptions}
                 onAddToQueue={handleAddToQueue}
+                onOpenQueue={handleOpenQueue}
                 onAddToPlaylist={handleAddToPlaylist}
                 onDownload={handleDownload}
                 onDelete={handleDelete}
             />
 
             <PlaylistPicker
-                visible={
-                    isPlaylistPickerVisible
-                }
+                visible={isPlaylistPickerVisible}
                 music={currentMusic}
                 onClose={() => {
-                    setIsPlaylistPickerVisible(
-                        false
-                    );
+                    setIsPlaylistPickerVisible(false);
+                }}
+            />
+
+            <QueueSheet
+                visible={isQueueVisible}
+                onClose={() => {
+                    setIsQueueVisible(false);
                 }}
             />
         </>
