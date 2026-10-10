@@ -1,5 +1,6 @@
 import {
     Alert,
+    Image,
     Modal,
     Pressable,
     ScrollView,
@@ -12,9 +13,14 @@ import { useState } from "react";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { MaterialDesignIcons } from "@react-native-vector-icons/material-design-icons";
+import {
+    MaterialDesignIcons
+} from "@react-native-vector-icons/material-design-icons";
 
-import { useAudioPlayerContext } from "../../context/AudioPlayerContext";
+import {
+    useAudioPlayerContext
+} from "../../context/AudioPlayerContext";
+
 import {
     MusicOptionsMenu,
     PlaylistPicker
@@ -22,8 +28,14 @@ import {
 
 import Colors from "../../constants/Colors";
 import { formatTime } from "../../constants/Utils";
-import { deleteDriveFile } from "../../services/drive/driveService";
-import { downloadMusicToLocal } from "../../services/local/localMusicService";
+
+import {
+    deleteDriveFile
+} from "../../services/drive/driveService";
+
+import {
+    downloadMusicToLocal
+} from "../../services/local/localMusicService";
 
 const Player = () => {
     const theme = useColorScheme();
@@ -52,12 +64,37 @@ const Player = () => {
         clearQueue
     } = useAudioPlayerContext();
 
-    const progress = duration > 0 ? currentTime / duration : 0;
+    const progress = duration > 0
+        ? Math.min(currentTime / duration, 1)
+        : 0;
 
-    const handleSeek = (event) => {
-        if (!progressWidth || duration <= 0) return;
+    const title = currentMusic?.title
+        || currentMusic?.name
+        || "Unknown song";
+
+    const artist = currentMusic?.artist
+        || "Unknown artist";
+
+    const metadata = [
+        ["Album", currentMusic?.album],
+        ["Album artist", currentMusic?.albumArtist],
+        ["Genre", currentMusic?.genre],
+        ["Year", currentMusic?.year],
+        ["Contributing artists", currentMusic?.contributingArtists],
+        ["Track", currentMusic?.track]
+    ].filter(([, value]) => (
+        value !== undefined
+        && value !== null
+        && String(value).trim() !== ""
+    ));
+
+    const handleSeek = event => {
+        if (!progressWidth || duration <= 0) {
+            return;
+        }
 
         const { locationX } = event.nativeEvent;
+
         const position = Math.max(
             0,
             Math.min(1, locationX / progressWidth)
@@ -67,40 +104,51 @@ const Player = () => {
     };
 
     const handleAddToQueue = () => {
-        if (!currentMusic) return;
+        if (!currentMusic) {
+            return;
+        }
 
         addToQueue(currentMusic);
         setIsMusicOptionsVisible(false);
     };
 
     const handleAddToPlaylist = () => {
-        if (!currentMusic) return;
+        if (!currentMusic) {
+            return;
+        }
 
         setIsMusicOptionsVisible(false);
         setIsPlaylistPickerVisible(true);
     };
 
     const handleDownload = async () => {
-        if (!currentMusic) return;
+        if (!currentMusic) {
+            return;
+        }
 
         try {
             await downloadMusicToLocal(currentMusic);
 
             Alert.alert(
                 "Download Complete",
-                `${currentMusic.name} has been saved to the IsaiVault folder.`
+                `${title} has been saved to the IsaiVault folder.`
             );
         } catch (error) {
-            Alert.alert("Download Failed", error.message);
+            Alert.alert(
+                "Download Failed",
+                error.message
+            );
         }
     };
 
     const handleDelete = () => {
-        if (!currentMusic) return;
+        if (!currentMusic) {
+            return;
+        }
 
         Alert.alert(
             "Delete Music",
-            `Are you sure you want to delete "${currentMusic.name}" from Google Drive?`,
+            `Are you sure you want to delete "${title}" from Google Drive?`,
             [
                 {
                     text: "Cancel",
@@ -112,13 +160,18 @@ const Player = () => {
                     onPress: async () => {
                         try {
                             await deleteDriveFile(currentMusic.id);
+
                             Alert.alert(
                                 "Deleted",
                                 "The music file has been deleted from Google Drive."
                             );
+
                             router.back();
                         } catch (error) {
-                            Alert.alert("Delete Failed", error.message);
+                            Alert.alert(
+                                "Delete Failed",
+                                error.message
+                            );
                         }
                     }
                 }
@@ -126,9 +179,9 @@ const Player = () => {
         );
     };
 
-    const handleQueueItemPress = async (music) => {
+    const handleQueueItemPress = async music => {
         setIsQueueVisible(false);
-        await playQueuedMusic(music);
+        await playMusic(music);
     };
 
     const handleClearQueue = () => {
@@ -159,9 +212,36 @@ const Player = () => {
                     justifyContent: "center"
                 }}
             >
-                <Text style={{ color: colors.text, fontSize: 16 }}>
+                <MaterialDesignIcons
+                    name="music-note-off"
+                    size={56}
+                    color={colors.textSecondary}
+                />
+
+                <Text
+                    style={{
+                        color: colors.text,
+                        fontSize: 16,
+                        marginTop: 16
+                    }}
+                >
                     No music playing
                 </Text>
+
+                <Pressable
+                    onPress={() => router.back()}
+                    style={{
+                        marginTop: 20,
+                        paddingHorizontal: 20,
+                        paddingVertical: 10,
+                        borderRadius: 20,
+                        backgroundColor: colors.surface
+                    }}
+                >
+                    <Text style={{ color: colors.text }}>
+                        Go Back
+                    </Text>
+                </Pressable>
             </SafeAreaView>
         );
     }
@@ -171,86 +251,115 @@ const Player = () => {
             <SafeAreaView
                 style={{
                     flex: 1,
-                    backgroundColor: colors.background,
-                    paddingHorizontal: 24
+                    backgroundColor: colors.background
                 }}
             >
-                <View
-                    style={{
-                        height: 64,
-                        flexDirection: "row",
-                        alignItems: "center",
-                        justifyContent: "space-between"
+                <ScrollView
+                    contentContainerStyle={{
+                        paddingHorizontal: 24,
+                        paddingBottom: 36
                     }}
+                    showsVerticalScrollIndicator={false}
                 >
-                    <Pressable
-                        onPress={() => router.back()}
-                        hitSlop={10}
+                    <View
                         style={{
-                            width: 44,
-                            height: 44,
+                            height: 64,
+                            flexDirection: "row",
                             alignItems: "center",
-                            justifyContent: "center"
+                            justifyContent: "space-between"
                         }}
                     >
-                        <MaterialDesignIcons
-                            name="chevron-down"
-                            size={30}
-                            color={colors.text}
-                        />
-                    </Pressable>
+                        <Pressable
+                            onPress={() => router.back()}
+                            hitSlop={10}
+                            style={{
+                                width: 44,
+                                height: 44,
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}
+                        >
+                            <MaterialDesignIcons
+                                name="chevron-down"
+                                size={30}
+                                color={colors.text}
+                            />
+                        </Pressable>
 
-                    <Text
-                        style={{
-                            color: colors.textSecondary,
-                            fontSize: 14,
-                            fontWeight: "600"
-                        }}
-                    >
-                        NOW PLAYING
-                    </Text>
+                        <View style={{ alignItems: "center" }}>
+                            <Text
+                                style={{
+                                    color: colors.textSecondary,
+                                    fontSize: 14,
+                                    fontWeight: "700",
+                                    letterSpacing: 1
+                                }}
+                            >
+                                NOW PLAYING
+                            </Text>
 
-                    <Pressable
-                        onPress={() => setIsMusicOptionsVisible(true)}
-                        hitSlop={10}
-                        style={{
-                            width: 44,
-                            height: 44,
-                            alignItems: "center",
-                            justifyContent: "center"
-                        }}
-                    >
-                        <MaterialDesignIcons
-                            name="dots-vertical"
-                            size={25}
-                            color={colors.text}
-                        />
-                    </Pressable>
-                </View>
+                            <Text
+                                numberOfLines={1}
+                                style={{
+                                    color: colors.textSecondary,
+                                    fontSize: 11,
+                                    marginTop: 3
+                                }}
+                            >
+                                {currentMusic.album || "IsaiVault"}
+                            </Text>
+                        </View>
 
-                <View
-                    style={{
-                        flex: 1,
-                        justifyContent: "center"
-                    }}
-                >
+                        <Pressable
+                            onPress={() => setIsMusicOptionsVisible(true)}
+                            hitSlop={10}
+                            style={{
+                                width: 44,
+                                height: 44,
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}
+                        >
+                            <MaterialDesignIcons
+                                name="dots-vertical"
+                                size={25}
+                                color={colors.text}
+                            />
+                        </Pressable>
+                    </View>
+
                     <View
                         style={{
                             width: "100%",
                             aspectRatio: 1,
                             maxWidth: 360,
                             alignSelf: "center",
-                            borderRadius: 28,
+                            marginTop: 12,
+                            borderRadius: 24,
                             backgroundColor: colors.elevated,
                             alignItems: "center",
-                            justifyContent: "center"
+                            justifyContent: "center",
+                            overflow: "hidden"
                         }}
                     >
-                        <MaterialDesignIcons
-                            name="music-note"
-                            size={110}
-                            color={colors.text}
-                        />
+                        {currentMusic.artwork ? (
+                            <Image
+                                source={{
+                                    uri: currentMusic.artwork
+                                }}
+                                resizeMode="cover"
+                                style={{
+                                    width: "100%",
+                                    height: "100%"
+                                }}
+                            />
+                        ) : (
+                            <MaterialDesignIcons
+                                name="music-note"
+                                size={110}
+                                color={colors.text}
+                            />
+                        )}
                     </View>
 
                     <Text
@@ -259,28 +368,43 @@ const Player = () => {
                             color: colors.text,
                             fontSize: 24,
                             fontWeight: "700",
-                            marginTop: 28,
+                            marginTop: 26,
                             textAlign: "center"
                         }}
                     >
-                        {currentMusic.name}
+                        {title}
                     </Text>
 
                     <Text
+                        numberOfLines={2}
                         style={{
                             color: colors.textSecondary,
-                            fontSize: 14,
+                            fontSize: 15,
                             marginTop: 8,
                             textAlign: "center"
                         }}
                     >
-                        Audio
+                        {artist}
                     </Text>
 
-                    <View style={{ marginTop: 32 }}>
+                    {currentMusic.albumArtist ? (
+                        <Text
+                            numberOfLines={1}
+                            style={{
+                                color: colors.textSecondary,
+                                fontSize: 12,
+                                marginTop: 5,
+                                textAlign: "center"
+                            }}
+                        >
+                            Album artist: {currentMusic.albumArtist}
+                        </Text>
+                    ) : null}
+
+                    <View style={{ marginTop: 30 }}>
                         <Pressable
                             onPress={handleSeek}
-                            onLayout={(event) => {
+                            onLayout={event => {
                                 setProgressWidth(
                                     event.nativeEvent.layout.width
                                 );
@@ -334,21 +458,22 @@ const Player = () => {
                             flexDirection: "row",
                             alignItems: "center",
                             justifyContent: "center",
-                            marginTop: 30
+                            marginTop: 24
                         }}
                     >
                         <Pressable
                             onPress={playPrevious}
+                            hitSlop={8}
                             style={{
-                                width: 54,
-                                height: 54,
+                                width: 58,
+                                height: 58,
                                 alignItems: "center",
                                 justifyContent: "center"
                             }}
                         >
                             <MaterialDesignIcons
                                 name="skip-previous"
-                                size={32}
+                                size={34}
                                 color={colors.text}
                             />
                         </Pressable>
@@ -356,33 +481,35 @@ const Player = () => {
                         <Pressable
                             onPress={togglePlayback}
                             style={{
-                                width: 68,
-                                height: 68,
-                                borderRadius: 34,
+                                width: 70,
+                                height: 70,
+                                borderRadius: 35,
                                 alignItems: "center",
                                 justifyContent: "center",
-                                backgroundColor: colors.text
+                                backgroundColor: colors.text,
+                                marginHorizontal: 16
                             }}
                         >
                             <MaterialDesignIcons
                                 name={status.playing ? "pause" : "play"}
-                                size={34}
+                                size={36}
                                 color={colors.background}
                             />
                         </Pressable>
 
                         <Pressable
                             onPress={playNext}
+                            hitSlop={8}
                             style={{
-                                width: 54,
-                                height: 54,
+                                width: 58,
+                                height: 58,
                                 alignItems: "center",
                                 justifyContent: "center"
                             }}
                         >
                             <MaterialDesignIcons
                                 name="skip-next"
-                                size={32}
+                                size={34}
                                 color={colors.text}
                             />
                         </Pressable>
@@ -407,6 +534,7 @@ const Player = () => {
                             size={22}
                             color={colors.text}
                         />
+
                         <Text
                             style={{
                                 color: colors.text,
@@ -418,7 +546,65 @@ const Player = () => {
                             Open Queue ({queue.length})
                         </Text>
                     </Pressable>
-                </View>
+
+                    {metadata.length > 0 ? (
+                        <View
+                            style={{
+                                marginTop: 28,
+                                padding: 16,
+                                borderRadius: 18,
+                                backgroundColor: colors.elevated
+                            }}
+                        >
+                            <Text
+                                style={{
+                                    color: colors.text,
+                                    fontSize: 16,
+                                    fontWeight: "700",
+                                    marginBottom: 8
+                                }}
+                            >
+                                Song information
+                            </Text>
+
+                            {metadata.map(([label, value]) => (
+                                <View
+                                    key={label}
+                                    style={{
+                                        flexDirection: "row",
+                                        justifyContent: "space-between",
+                                        alignItems: "flex-start",
+                                        paddingVertical: 9,
+                                        borderBottomWidth: 1,
+                                        borderBottomColor: colors.surface
+                                    }}
+                                >
+                                    <Text
+                                        style={{
+                                            color: colors.textSecondary,
+                                            fontSize: 13,
+                                            flex: 1
+                                        }}
+                                    >
+                                        {label}
+                                    </Text>
+
+                                    <Text
+                                        style={{
+                                            color: colors.text,
+                                            fontSize: 13,
+                                            fontWeight: "500",
+                                            flex: 1.5,
+                                            textAlign: "right"
+                                        }}
+                                    >
+                                        {String(value)}
+                                    </Text>
+                                </View>
+                            ))}
+                        </View>
+                    ) : null}
+                </ScrollView>
             </SafeAreaView>
 
             <MusicOptionsMenu
@@ -479,6 +665,7 @@ const Player = () => {
                                 >
                                     Playing Queue
                                 </Text>
+
                                 <Text
                                     style={{
                                         color: colors.textSecondary,
@@ -490,7 +677,12 @@ const Player = () => {
                                 </Text>
                             </View>
 
-                            <View style={{ flexDirection: "row", alignItems: "center" }}>
+                            <View
+                                style={{
+                                    flexDirection: "row",
+                                    alignItems: "center"
+                                }}
+                            >
                                 <Pressable
                                     onPress={handleClearQueue}
                                     hitSlop={8}
@@ -517,9 +709,12 @@ const Player = () => {
                             </View>
                         </View>
 
-                        <ScrollView showsVerticalScrollIndicator={false}>
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                        >
                             {queue.map((music, index) => {
-                                const isCurrent = index === currentIndex;
+                                const isCurrent =
+                                    music.id === currentMusic.id;
 
                                 return (
                                     <View
@@ -540,47 +735,70 @@ const Player = () => {
                                                 alignItems: "center"
                                             }}
                                         >
-                                            <MaterialDesignIcons
-                                                name={
-                                                    isCurrent
-                                                        ? status.playing
+                                            {music.artwork ? (
+                                                <Image
+                                                    source={{
+                                                        uri: music.artwork
+                                                    }}
+                                                    style={{
+                                                        width: 44,
+                                                        height: 44,
+                                                        borderRadius: 8
+                                                    }}
+                                                />
+                                            ) : (
+                                                <MaterialDesignIcons
+                                                    name={
+                                                        isCurrent && status.playing
                                                             ? "volume-high"
                                                             : "music-note"
-                                                        : "music-note"
-                                                }
-                                                size={22}
-                                                color={
-                                                    isCurrent
-                                                        ? colors.text
-                                                        : colors.textSecondary
-                                                }
-                                            />
+                                                    }
+                                                    size={24}
+                                                    color={
+                                                        isCurrent
+                                                            ? colors.text
+                                                            : colors.textSecondary
+                                                    }
+                                                />
+                                            )}
 
-                                            <View style={{ flex: 1, marginLeft: 14 }}>
+                                            <View
+                                                style={{
+                                                    flex: 1,
+                                                    marginLeft: 14
+                                                }}
+                                            >
                                                 <Text
                                                     numberOfLines={1}
                                                     style={{
                                                         color: colors.text,
                                                         fontSize: 15,
-                                                        fontWeight: isCurrent ? "700" : "500"
+                                                        fontWeight: isCurrent
+                                                            ? "700"
+                                                            : "500"
                                                     }}
                                                 >
-                                                    {music.name}
+                                                    {music.title || music.name}
                                                 </Text>
 
                                                 <Text
+                                                    numberOfLines={1}
                                                     style={{
                                                         color: colors.textSecondary,
                                                         fontSize: 12,
                                                         marginTop: 4
                                                     }}
                                                 >
-                                                    {isCurrent ? "Now playing" : `Track ${index + 1}`}
+                                                    {music.artist || (
+                                                        isCurrent
+                                                            ? "Now playing"
+                                                            : `Track ${index + 1}`
+                                                    )}
                                                 </Text>
                                             </View>
                                         </Pressable>
 
-                                        {!isCurrent && (
+                                        {!isCurrent ? (
                                             <Pressable
                                                 onPress={() => removeFromQueue(music.id)}
                                                 hitSlop={8}
@@ -592,12 +810,12 @@ const Player = () => {
                                                     color={colors.textSecondary}
                                                 />
                                             </Pressable>
-                                        )}
+                                        ) : null}
                                     </View>
                                 );
                             })}
 
-                            {queue.length === 0 && (
+                            {queue.length === 0 ? (
                                 <Text
                                     style={{
                                         color: colors.textSecondary,
@@ -607,7 +825,7 @@ const Player = () => {
                                 >
                                     Your queue is empty.
                                 </Text>
-                            )}
+                            ) : null}
                         </ScrollView>
                     </View>
                 </View>

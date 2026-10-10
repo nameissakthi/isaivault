@@ -1,4 +1,3 @@
-
 import {
     createContext,
     useContext,
@@ -8,15 +7,39 @@ import {
 } from "react";
 
 import {
+    Platform
+} from "react-native";
+
+import {
     useAudioPlayer,
-    useAudioPlayerStatus
+    useAudioPlayerStatus,
+    setAudioModeAsync,
+    requestNotificationPermissionsAsync
 } from "expo-audio";
 
 import {
     getDriveAudioSource
 } from "../services/drive/driveService";
 
+import {
+    getDriveMusicMetadata
+} from "../services/drive/musicMetadataService";
+
 const AudioPlayerContext = createContext(null);
+
+const getValidArtworkUrl = artwork => {
+    if (typeof artwork !== "string" || !artwork.trim()) {
+        return undefined;
+    }
+
+    const url = artwork.trim();
+
+    if (/^(https?:\/\/|file:\/\/)/i.test(url)) {
+        return url;
+    }
+
+    return undefined;
+};
 
 export const AudioPlayerProvider = ({ children }) => {
     const [currentMusic, setCurrentMusic] = useState(null);
@@ -34,34 +57,105 @@ export const AudioPlayerProvider = ({ children }) => {
     const changingTrack = useRef(false);
     const shouldPlayAfterLoad = useRef(false);
     const finishHandled = useRef(false);
+    const audioModeReady = useRef(Promise.resolve());
 
     const currentTime = status.currentTime ?? 0;
     const duration = status.duration ?? 0;
 
-    const updateQueue = (nextQueue) => {
+    useEffect(() => {
+        audioModeReady.current = setAudioModeAsync({
+            playsInSilentMode: true,
+            shouldPlayInBackground: true,
+            interruptionMode: "doNotMix"
+        }).catch(error => {
+            console.log(
+                "Unable to configure background audio:",
+                error.message
+            );
+        });
+
+        if (Platform.OS === "android") {
+            requestNotificationPermissionsAsync().catch(error => {
+                console.log(
+                    "Unable to request notification permission:",
+                    error.message
+                );
+            });
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!currentMusic) {
+            try {
+                player.clearLockScreenControls();
+            } catch (error) {
+                console.log(
+                    "Unable to clear lock-screen controls:",
+                    error.message
+                );
+            }
+            return;
+        }
+
+        let cancelled = false;
+
+        const updateLockScreen = async () => {
+            const artworkUrl = getValidArtworkUrl(
+                currentMusic.artwork
+            );
+
+            const metadata = {
+                title: currentMusic.title || currentMusic.name || "Unknown song",
+                artist: currentMusic.artist || "Unknown artist",
+                albumTitle: currentMusic.album || "IsaiVault",
+                ...(artworkUrl ? { artworkUrl } : {})
+            };
+
+            try {
+                await player.setActiveForLockScreen(true, metadata, {
+                    showSeekBackward: true,
+                    showSeekForward: true
+                });
+
+                if (!cancelled) {
+                    await player.updateLockScreenMetadata(metadata);
+                }
+            } catch (error) {
+                console.log(
+                    "Unable to update lock-screen metadata:",
+                    error.message
+                );
+            }
+        };
+
+        updateLockScreen();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [currentMusic, player]);
+
+    const updateQueue = nextQueue => {
         queueRef.current = nextQueue;
         setQueue(nextQueue);
     };
 
-    const updatePlaylistQueue = (nextQueue) => {
+    const updatePlaylistQueue = nextQueue => {
         playlistQueueRef.current = nextQueue;
         setPlaylistQueue(nextQueue);
     };
 
-    const updateCurrentMusic = (music) => {
+    const updateCurrentMusic = music => {
         currentMusicRef.current = music;
         setCurrentMusic(music);
     };
 
-    const updateCurrentIndex = (index) => {
+    const updateCurrentIndex = index => {
         currentIndexRef.current = index;
         setCurrentIndex(index);
     };
 
-    const loadMusic = async (
-        music,
-        options = {}
-    ) => {
+    const loadMusic = async (music, options = {}) => {
         if (!music || changingTrack.current) {
             return;
         }
@@ -71,15 +165,36 @@ export const AudioPlayerProvider = ({ children }) => {
         finishHandled.current = false;
 
         try {
+            await audioModeReady.current;
+
             const source = await getDriveAudioSource(music.id);
 
-            updateCurrentMusic(music);
+            updateCurrentMusic({
+                ...music,
+                title: music.title || music.name || "Unknown song",
+                artist: music.artist || "Unknown artist"
+            });
 
             if (typeof options.playlistIndex === "number") {
                 updateCurrentIndex(options.playlistIndex);
             }
 
             player.replace(source);
+
+            getDriveMusicMetadata(music)
+                .then(metadata => {
+                    if (currentMusicRef.current?.id !== music.id) {
+                        return;
+                    }
+
+                    updateCurrentMusic(metadata);
+                })
+                .catch(error => {
+                    console.log(
+                        "Unable to load music metadata:",
+                        error.message
+                    );
+                });
         } catch (error) {
             shouldPlayAfterLoad.current = false;
 
@@ -92,10 +207,7 @@ export const AudioPlayerProvider = ({ children }) => {
         }
     };
 
-    const playMusic = async (
-        music,
-        playbackQueue = null
-    ) => {
+    const playMusic = async (music, playbackQueue = null) => {
         if (!music) {
             return;
         }
@@ -109,11 +221,10 @@ export const AudioPlayerProvider = ({ children }) => {
                 ? playbackQueue
                 : [music, ...playbackQueue];
 
-            const nextIndex = index >= 0 ? index : 0;
-
             updatePlaylistQueue(nextPlaylist);
+
             await loadMusic(music, {
-                playlistIndex: nextIndex
+                playlistIndex: index >= 0 ? index : 0
             });
 
             return;
@@ -126,7 +237,7 @@ export const AudioPlayerProvider = ({ children }) => {
         });
     };
 
-    const addToQueue = (music) => {
+    const addToQueue = music => {
         if (!music) {
             return;
         }
@@ -149,7 +260,7 @@ export const AudioPlayerProvider = ({ children }) => {
         ]);
     };
 
-    const removeFromQueue = (musicId) => {
+    const removeFromQueue = musicId => {
         updateQueue(
             queueRef.current.filter(
                 music => music.id !== musicId
@@ -205,12 +316,10 @@ export const AudioPlayerProvider = ({ children }) => {
         });
     };
 
-    const setPlaybackQueue = (musics) => {
-        if (!Array.isArray(musics)) {
-            return;
+    const setPlaybackQueue = musics => {
+        if (Array.isArray(musics)) {
+            updateQueue(musics);
         }
-
-        updateQueue(musics);
     };
 
     const togglePlayback = () => {
@@ -230,11 +339,9 @@ export const AudioPlayerProvider = ({ children }) => {
     };
 
     const resumeMusic = () => {
-        if (!currentMusicRef.current) {
-            return;
+        if (currentMusicRef.current) {
+            player.play();
         }
-
-        player.play();
     };
 
     const stopMusic = () => {
@@ -242,7 +349,7 @@ export const AudioPlayerProvider = ({ children }) => {
         finishHandled.current = true;
 
         player.pause();
-        player.seekTo(0);
+        player.clearLockScreenControls();
 
         updateCurrentMusic(null);
         updateCurrentIndex(-1);
@@ -250,7 +357,7 @@ export const AudioPlayerProvider = ({ children }) => {
         updateQueue([]);
     };
 
-    const seekTo = (position) => {
+    const seekTo = position => {
         player.seekTo(position);
     };
 
@@ -261,7 +368,7 @@ export const AudioPlayerProvider = ({ children }) => {
 
         shouldPlayAfterLoad.current = false;
         player.play();
-    }, [status.isLoaded]);
+    }, [status.isLoaded, currentMusic, player]);
 
     useEffect(() => {
         if (!status.didJustFinish) {

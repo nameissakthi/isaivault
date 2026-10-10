@@ -11,8 +11,7 @@ import { getSavedTheme } from "../services/theme/themeService";
 import Loading from "../components/Loading";
 
 const RootLayout = () => {
-    const [themeLoaded, setThemeLoaded] =
-        useState(false);
+    const [themeLoaded, setThemeLoaded] = useState(false);
 
     useEffect(() => {
         const loadTheme = async () => {
@@ -33,11 +32,13 @@ const RootLayout = () => {
                 <LibraryProvider>
                     <PlaylistProvider>
                         <StatusBar style="auto" />
+
                         <Stack
                             screenOptions={{
                                 headerShown: false
                             }}
                         />
+
                         <MiniPlayer />
                     </PlaylistProvider>
                 </LibraryProvider>

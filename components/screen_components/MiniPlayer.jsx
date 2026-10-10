@@ -5,14 +5,8 @@ import {
     useColorScheme
 } from "react-native";
 
-import {
-    useRouter,
-    useSegments
-} from "expo-router";
-
-import {
-    useRef
-} from "react";
+import { useEffect, useRef } from "react";
+import { useRouter, useSegments } from "expo-router";
 
 import {
     MaterialDesignIcons
@@ -43,13 +37,19 @@ const MiniPlayer = () => {
         togglePlayback
     } = useAudioPlayerContext();
 
-    const isFullPlayerScreen = segments.includes("(player)");
+    const isPlayerScreen = segments.some(
+        segment => segment === "(player)"
+    );
 
     const progress = duration > 0
         ? Math.min(currentTime / duration, 1)
         : 0;
 
-    if (!currentMusic || isFullPlayerScreen) {
+    useEffect(() => {
+        openingPlayer.current = false;
+    }, [segments]);
+
+    if (!currentMusic || isPlayerScreen) {
         return null;
     }
 
@@ -60,11 +60,15 @@ const MiniPlayer = () => {
 
         openingPlayer.current = true;
 
-        router.push("/(player)");
-
-        setTimeout(() => {
+        try {
+            router.push("/(player)");
+        } catch (error) {
             openingPlayer.current = false;
-        }, 500);
+            console.log(
+                "Unable to open music player:",
+                error.message
+            );
+        }
     };
 
     return (
@@ -96,12 +100,10 @@ const MiniPlayer = () => {
         >
             <Pressable
                 onPress={openFullPlayer}
-                disabled={openingPlayer.current}
                 style={{
                     flex: 1,
                     flexDirection: "row",
-                    alignItems: "center",
-                    opacity: openingPlayer.current ? 0.6 : 1
+                    alignItems: "center"
                 }}
             >
                 <View
@@ -136,17 +138,20 @@ const MiniPlayer = () => {
                             fontWeight: "600"
                         }}
                     >
-                        {currentMusic.name}
+                        {currentMusic.title
+                            || currentMusic.name
+                            || "Unknown"}
                     </Text>
 
                     <Text
+                        numberOfLines={1}
                         style={{
                             color: colors.textSecondary,
                             fontSize: 12,
                             marginTop: 3
                         }}
                     >
-                        Audio
+                        {currentMusic.artist || "Audio"}
                     </Text>
 
                     <View
@@ -173,14 +178,12 @@ const MiniPlayer = () => {
 
             <Pressable
                 onPress={togglePlayback}
-                disabled={openingPlayer.current}
                 style={{
                     width: 44,
                     height: 44,
                     borderRadius: 22,
                     alignItems: "center",
-                    justifyContent: "center",
-                    opacity: openingPlayer.current ? 0.6 : 1
+                    justifyContent: "center"
                 }}
             >
                 <MaterialDesignIcons
