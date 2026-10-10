@@ -1,3 +1,4 @@
+
 import {
     Modal,
     Pressable,
@@ -7,14 +8,9 @@ import {
     Easing
 } from "react-native";
 
-import {
-    useEffect,
-    useRef
-} from "react";
+import { useEffect, useRef } from "react";
 
-import {
-    MaterialDesignIcons
-} from "@react-native-vector-icons/material-design-icons";
+import { MaterialDesignIcons } from "@react-native-vector-icons/material-design-icons";
 
 import ThemedView from "../ThemedView";
 import ThemedText from "../ThemedText";
@@ -25,7 +21,6 @@ const MusicOptionsMenu = ({
     visible,
     onClose,
     onAddToQueue,
-    onOpenQueue,
     onAddToPlaylist,
     onDownload,
     onDelete,
@@ -33,9 +28,10 @@ const MusicOptionsMenu = ({
 }) => {
     const theme = useColorScheme();
 
-    const colors = theme === "dark"
-        ? Colors.dark
-        : Colors.light;
+    const colors =
+        theme === "dark"
+            ? Colors.dark
+            : Colors.light;
 
     const slideY = useRef(
         new Animated.Value(350)
@@ -45,9 +41,15 @@ const MusicOptionsMenu = ({
         new Animated.Value(0)
     ).current;
 
-    useEffect(() => {
-        if (!visible) return;
+    const isClosing = useRef(false);
 
+    useEffect(() => {
+        if (!visible) {
+            isClosing.current = false;
+            return;
+        }
+
+        isClosing.current = false;
         slideY.setValue(350);
         opacity.setValue(0);
 
@@ -65,9 +67,15 @@ const MusicOptionsMenu = ({
                 useNativeDriver: true
             })
         ]).start();
-    }, [visible]);
+    }, [visible, slideY, opacity]);
 
-    const handleClose = callback => {
+    const closeMenu = (callback) => {
+        if (isClosing.current) {
+            return;
+        }
+
+        isClosing.current = true;
+
         Animated.parallel([
             Animated.timing(slideY, {
                 toValue: 350,
@@ -81,10 +89,19 @@ const MusicOptionsMenu = ({
                 easing: Easing.in(Easing.ease),
                 useNativeDriver: true
             })
-        ]).start(() => {
-            onClose?.();
+        ]).start(({ finished }) => {
+            if (!finished) {
+                isClosing.current = false;
+                return;
+            }
+
             callback?.();
+            onClose?.();
         });
+    };
+
+    const handleClose = () => {
+        closeMenu();
     };
 
     const options = [
@@ -92,11 +109,6 @@ const MusicOptionsMenu = ({
             title: "Add to Queue",
             icon: "playlist-plus",
             onPress: onAddToQueue
-        },
-        {
-            title: "Open Queue",
-            icon: "playlist-play",
-            onPress: onOpenQueue
         },
         {
             title: "Add to Playlist",
@@ -108,6 +120,12 @@ const MusicOptionsMenu = ({
             icon: "download",
             onPress: onDownload
         },
+        {
+            title: "Delete from Drive",
+            icon: "delete",
+            onPress: onDelete,
+            danger: true
+        },
         ...(onRemoveFromPlaylist
             ? [
                 {
@@ -117,21 +135,15 @@ const MusicOptionsMenu = ({
                     danger: true
                 }
             ]
-            : []),
-        ...(onDelete
-            ? [
-                {
-                    title: "Delete from Drive",
-                    icon: "delete",
-                    onPress: onDelete,
-                    danger: true
-                }
-            ]
             : [])
     ];
 
-    const handleOptionPress = option => {
-        handleClose(option.onPress);
+    const handleOptionPress = (option) => {
+        closeMenu(() => {
+            if (option.onPress) {
+                option.onPress();
+            }
+        });
     };
 
     return (
@@ -139,8 +151,7 @@ const MusicOptionsMenu = ({
             visible={visible}
             transparent
             animationType="none"
-            statusBarTranslucent
-            onRequestClose={() => handleClose()}
+            onRequestClose={handleClose}
         >
             <Animated.View
                 style={{
@@ -150,7 +161,7 @@ const MusicOptionsMenu = ({
                 }}
             >
                 <Pressable
-                    onPress={() => handleClose()}
+                    onPress={handleClose}
                     style={{
                         flex: 1,
                         justifyContent: "flex-end"
@@ -161,7 +172,11 @@ const MusicOptionsMenu = ({
                     >
                         <Animated.View
                             style={{
-                                transform: [{ translateY: slideY }]
+                                transform: [
+                                    {
+                                        translateY: slideY
+                                    }
+                                ]
                             }}
                         >
                             <ThemedView
@@ -174,9 +189,10 @@ const MusicOptionsMenu = ({
                                     borderRadius: 24,
                                     backgroundColor: colors.elevated,
                                     borderWidth: 1,
-                                    borderColor: theme === "dark"
-                                        ? "rgba(255,255,255,0.08)"
-                                        : "rgba(0,0,0,0.08)",
+                                    borderColor:
+                                        theme === "dark"
+                                            ? "rgba(255,255,255,0.08)"
+                                            : "rgba(0,0,0,0.08)",
                                     elevation: 10,
                                     shadowColor: "#000",
                                     shadowOffset: {
@@ -202,7 +218,9 @@ const MusicOptionsMenu = ({
                                 {options.map(option => (
                                     <Pressable
                                         key={option.title}
-                                        onPress={() => handleOptionPress(option)}
+                                        onPress={() =>
+                                            handleOptionPress(option)
+                                        }
                                         style={({ pressed }) => ({
                                             minHeight: 56,
                                             flexDirection: "row",

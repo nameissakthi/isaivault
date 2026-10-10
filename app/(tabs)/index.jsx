@@ -1,7 +1,5 @@
-import {
-    useEffect,
-    useState
-} from "react";
+
+import { useEffect, useState } from "react";
 
 import {
     View,
@@ -31,9 +29,8 @@ const Home = () => {
 
     const colorScheme = useColorScheme();
 
-    const colors = Colors[
-        colorScheme === "dark" ? "dark" : "light"
-    ];
+    const colors =
+        Colors[colorScheme === "dark" ? "dark" : "light"];
 
     const { user } = useAuth();
 
@@ -49,11 +46,15 @@ const Home = () => {
 
     const [musics, setMusics] = useState([]);
     const [selectedMusic, setSelectedMusic] = useState(null);
+    const [playlistMusic, setPlaylistMusic] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isPlaylistPickerVisible, setIsPlaylistPickerVisible] = useState(false);
+    const [isPlaylistPickerVisible, setIsPlaylistPickerVisible] =
+        useState(false);
 
     useEffect(() => {
-        if (isLibraryLoading) return;
+        if (isLibraryLoading) {
+            return;
+        }
 
         loadMusic();
     }, [isLibraryLoading]);
@@ -75,14 +76,31 @@ const Home = () => {
         }
     };
 
-    const handlePlayMusic = async music => {
-        await playMusic(music, musics);
-    };
-
     const handleAddToQueue = () => {
-        if (!selectedMusic) return;
+        if (!selectedMusic) {
+            return;
+        }
 
         addToQueue(selectedMusic);
+    };
+
+    const handleAddToPlaylist = () => {
+        if (!selectedMusic) {
+            return;
+        }
+
+        setPlaylistMusic(selectedMusic);
+        setIsPlaylistPickerVisible(true);
+    };
+
+    const handleClosePlaylistPicker = () => {
+        setIsPlaylistPickerVisible(false);
+        setPlaylistMusic(null);
+        setSelectedMusic(null);
+    };
+
+    const handleCloseMusicOptions = () => {
+        setSelectedMusic(null);
     };
 
     return (
@@ -125,7 +143,9 @@ const Home = () => {
                     </View>
 
                     <Pressable
-                        onPress={() => router.push("/(tabs)/settings")}
+                        onPress={() =>
+                            router.push("/(tabs)/settings")
+                        }
                         style={[
                             styles.profile,
                             {
@@ -141,7 +161,9 @@ const Home = () => {
                                 }
                             ]}
                         >
-                            {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                            {user?.name
+                                ?.charAt(0)
+                                ?.toUpperCase() || "U"}
                         </Text>
                     </Pressable>
                 </View>
@@ -202,8 +224,10 @@ const Home = () => {
                             <MusicCard
                                 key={music.id}
                                 name={music.name}
-                                onPress={() => handlePlayMusic(music)}
-                                onMenuPress={() => setSelectedMusic(music)}
+                                onPress={() => playMusic(music)}
+                                onMenuPress={() =>
+                                    setSelectedMusic(music)
+                                }
                             />
                         ))}
                     </View>
@@ -212,9 +236,9 @@ const Home = () => {
 
             <MusicOptionsMenu
                 visible={selectedMusic !== null}
-                onClose={() => setSelectedMusic(null)}
+                onClose={handleCloseMusicOptions}
                 onAddToQueue={handleAddToQueue}
-                onAddToPlaylist={() => setIsPlaylistPickerVisible(true)}
+                onAddToPlaylist={handleAddToPlaylist}
                 onDownload={() => {
                     console.log("Download:", selectedMusic);
                 }}
@@ -225,11 +249,8 @@ const Home = () => {
 
             <PlaylistPicker
                 visible={isPlaylistPickerVisible}
-                music={selectedMusic}
-                onClose={() => {
-                    setIsPlaylistPickerVisible(false);
-                    setSelectedMusic(null);
-                }}
+                music={playlistMusic}
+                onClose={handleClosePlaylistPicker}
             />
         </View>
     );
@@ -239,27 +260,32 @@ const styles = StyleSheet.create({
     container: {
         flex: 1
     },
+
     content: {
         paddingHorizontal: 20,
         paddingTop: 60,
         paddingBottom: 140
     },
+
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         marginBottom: 30
     },
+
     greeting: {
         fontSize: 15,
         opacity: 0.7
     },
+
     username: {
         fontSize: 25,
         fontWeight: "700",
         marginTop: 3,
         maxWidth: 250
     },
+
     profile: {
         width: 46,
         height: 46,
@@ -267,29 +293,36 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center"
     },
+
     profileText: {
         fontSize: 18,
         fontWeight: "700"
     },
+
     titleContainer: {
         marginBottom: 18
     },
+
     title: {
         fontSize: 23,
         fontWeight: "700"
     },
+
     count: {
         fontSize: 13,
         marginTop: 4
     },
+
     musicList: {
         gap: 12
     },
+
     emptyContainer: {
         alignItems: "center",
         justifyContent: "center",
         paddingVertical: 80
     },
+
     emptyText: {
         fontSize: 15
     }

@@ -62,7 +62,6 @@ const PlaylistDetails = () => {
 
     const {
         playMusic,
-        setQueue,
         addToQueue
     } = useAudioPlayerContext();
 
@@ -129,7 +128,9 @@ const PlaylistDetails = () => {
     }
 
     const handlePlayAll = async () => {
-        if (!playlist?.musics?.length) return;
+        if (!playlist?.musics?.length) {
+            return;
+        }
 
         await playMusic(
             playlist.musics[0],
@@ -138,9 +139,12 @@ const PlaylistDetails = () => {
     };
 
     const handleMusicPress = async (music) => {
+        if (!music || !playlist?.musics?.length) {
+            return;
+        }
+
         await playMusic(music, playlist.musics);
     };
-
 
     const handleOpenMenu = music => {
         setSelectedMusic(music);
