@@ -1,5 +1,7 @@
 # IsaiVault
-![screens](screenshots\screens.png)
+<image
+  src="screenshots/screens.png"
+/>
 IsaiVault is a mobile music player that uses Google Drive to store and stream music. Users can connect their Google account, select a music folder from Google Drive, and play their music directly from the app.
 
 ## Working video
